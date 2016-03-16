@@ -15,22 +15,34 @@ public class LinearRegression extends Classifier{
     //finds its weights.
     @Override
     public void buildClassifier(Instances trainingData) throws Exception {
+
         trainingData = new Instances(trainingData);
+
+        trainingData.setClassIndex(trainingData.numAttributes() - 1);
+
         m_ClassIndex = trainingData.classIndex();
         //since class attribute is also an attribuite we subtract 1
         m_truNumAttributes = trainingData.numAttributes() - 1;
         setAlpha();
         m_coefficients = gradientDescent(trainingData);
 
-        // TODO: scale features, normalize mean, choose learning rate
-        trainingData.setClassIndex(trainingData.numAttributes() - 1);
+        // Print coefficients
+        for (int i = 0; i < m_coefficients.length; i++) {
+            System.out.println(m_coefficients[i]);
+        }
 
-        // choose learning rate alpha
+        // TODO: scale features, normalize mean, choose learning rate
+        // trainingData.setClassIndex(trainingData.numAttributes() - 1);
+
+        // Choose learning rate alpha:
+
+        System.out.println("Setting Alpha....");
 
         double[] trialCoefficients = null;
         double minError = 100;
-        int alpha = 5;
+        int pow = 5;
 
+        // 1. Try different values for alpha
         for (int i = -17; i < 2; i++) {
 
             m_alpha = Math.pow(3, i);
@@ -40,12 +52,16 @@ public class LinearRegression extends Classifier{
             }
 
             double error = calculateSE(trainingData, trialCoefficients);
+            System.out.println("Tried with alphpa 3^" + i + ", received error: " + error);
+
             if (error < minError) {
                 minError = error;
-                alpha = i;
+                pow = i;
             }
 
         }
+
+        m_alpha = Math.pow(3, pow);
 
     }
 

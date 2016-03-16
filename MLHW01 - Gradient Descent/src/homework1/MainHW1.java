@@ -62,11 +62,19 @@ public class MainHW1 {
     }
 
     public static void main(String[] args) throws Exception {
+
         //load data
+        MainHW1 homework = new MainHW1();
+        Instances training = homework.loadData("housing_training.txt");
+        Instances testing = homework.loadData("housing_training.txt");
 
         //train classifier
+        LinearRegression function = new LinearRegression();
+        function.buildClassifier(training);
 
         //calculate error
+
+
     }
 
 }
