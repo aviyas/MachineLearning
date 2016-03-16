@@ -159,7 +159,6 @@ public class LinearRegression extends Classifier{
             sum += innerSum;
 
         }
-
         return sum / trainingData.numInstances();
     }
 
@@ -200,7 +199,7 @@ public class LinearRegression extends Classifier{
             sum += Math.pow(cur.classValue() - regressionPrediction(cur), 2);
         }
 
-        return sum / data.numAttributes();
+        return sum / (2 * data.numInstances());
     }
 
     /**
