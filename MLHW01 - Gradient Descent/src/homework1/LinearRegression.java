@@ -22,6 +22,9 @@ public class LinearRegression extends Classifier{
         setAlpha();
         m_coefficients = gradientDescent(trainingData);
 
+        // TODO: scale features, normalize mean, choose learning rate
+        trainingData.setClassIndex(trainingData.numAttributes() - 1);
+
     }
 
     private void setAlpha(){
@@ -46,9 +49,12 @@ public class LinearRegression extends Classifier{
             coefficients[i] = Math.random();
         }
 
-        double avgSqrErr = calculateSE(trainingData, coefficients);
+        // Improvement rate measurement variables
+        double prevAvgSqrErr = 0;
+        double curAvgSqrErr = calculateSE(trainingData, coefficients);
+        double improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
 
-        while (avgSqrErr > 0.03) {
+        for (int counter = 1; improvement > 0.003 ; counter++) {
 
             double[] tempCoefficients = new double[coefficients.length];
 
@@ -63,14 +69,16 @@ public class LinearRegression extends Classifier{
                 coefficients[i] = tempCoefficients[i];
             }
 
-            // 4. Calculates average squared avgSqrErr
-            avgSqrErr = calculateSE(trainingData, tempCoefficients);
+            // 4. Calculates average squared error every 100 iterations to check improvement rate
+            if (counter % 100 == 0) {
+                prevAvgSqrErr = curAvgSqrErr;
+                curAvgSqrErr = calculateSE(trainingData, coefficients);
+                improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
+            }
         }
 
         return coefficients;
     }
-
-    //
 
     /**
      * Calculates the derivative of the error function by the current weight.
@@ -82,7 +90,6 @@ public class LinearRegression extends Classifier{
     private double calculatePartialDerivative(Instances trainingData, double[] coefficients, int i) {
 
     double sum = 0;
-    trainingData.setClassIndex(trainingData.numAttributes() - 1);
 
         // Goes through all instances
         for (int j = 0; j < trainingData.numInstances(); j++) {
@@ -97,7 +104,7 @@ public class LinearRegression extends Classifier{
             // Measures difference from actual value
             innerSum -= trainingData.instance(j).classValue();
 
-            // Doubles by the weight that the derivative is by
+            // Doubles by the weight that the derivative is calculated by
             innerSum *= trainingData.instance(j).value(i);
 
             // Adds calculation of current instance to general sum
@@ -117,20 +124,35 @@ public class LinearRegression extends Classifier{
      * @throws Exception
      */
     public double regressionPrediction(Instance instance, double[] coefficients) throws Exception {
-        return 0;
+
+        double result = -1;
+
+        for (int i = 1; i < instance.numAttributes(); i++) {
+            result += coefficients[i] * instance.value(i - 1);
+        }
+
+        return result;
     }
 
     /**
      * Calculates the total squared error over the test data on a linear regression
      * predictor with weights given by coefficients.
-     * @param testData
+     * @param data
      * @param coefficients
      * @return
      * @throws Exception
      */
-    public double calculateSE(Instances testData, double[] coefficients) throws Exception {
+    public double calculateSE(Instances data, double[] coefficients) throws Exception {
 
-        return 0;
+        int sum = 0;
+        Instance cur;
+
+        for (int i = 0; i < data.numAttributes(); i++) {
+            cur = data.instance(i);
+            sum += Math.pow((cur.classValue() - regressionPrediction(cur, coefficients)), 2);
+        }
+
+        return sum;
     }
 
     /**
