@@ -43,84 +43,69 @@ public class LinearRegression extends Classifier{
 
         // 1. Guess the weights
         for (int i = 0; i < coefficients.length; i++) {
-            coefficients[i] = 1;
+            coefficients[i] = Math.random();
         }
 
-        // TODO: calculate error
-        double error = 100;
+        double avgSqrErr = calculateSE(trainingData, coefficients);
 
-        while (error > 0.03) {
+        while (avgSqrErr > 0.03) {
 
-            double[] temp_coefficients = new double[coefficients.length];
+            double[] tempCoefficients = new double[coefficients.length];
 
-            // 2. Calculates error for all weights
-            for (int i = 0; i < temp_coefficients.length; i++) {
-
-                double result = calculateSigma(trainingData, coefficients);
-
-                temp_coefficients[i] = coefficients[i] - ((m_alpha * result) / trainingData.numInstances());
-
+            // 2. Calculates new weights according to the gradient of the error function
+            for (int i = 0; i < tempCoefficients.length; i++) {
+                double partialDerivative = calculatePartialDerivative(trainingData, coefficients, i);
+                tempCoefficients[i] = coefficients[i] - (m_alpha * partialDerivative);
             }
 
             // 3. Updates weights accordingly
             for (int i = 0; i < coefficients.length; i++) {
-
-                error += (coefficients[i] - temp_coefficients[i]);
-                coefficients[i] = temp_coefficients[i];
-
+                coefficients[i] = tempCoefficients[i];
             }
 
-            error /= coefficients.length;
+            // 4. Calculates average squared avgSqrErr
+            avgSqrErr = calculateSE(trainingData, tempCoefficients);
         }
-
-        //
-
-        // 2. For each instance - calculate error rate
-            // * error rate = average squared error:
-            //   using weights and all features but the last one, calculate the derivative by current weight
-
-
-
-        // 3. Update weights
-
-        // Continue if error is still too big.
-
-        //
 
         return coefficients;
     }
 
-    private double calculateSigma(Instances trainingData, double[] coefficients) {
+    //
 
-        double sum = 0;
-        trainingData.setClassIndex(trainingData.numAttributes() - 1);
+    /**
+     * Calculates the derivative of the error function by the current weight.
+     * @param trainingData
+     * @param coefficients
+     * @param i - current weight index.
+     * @return
+     */
+    private double calculatePartialDerivative(Instances trainingData, double[] coefficients, int i) {
 
-        // Calculates the derivative of the error function by the current weight
-        for (int i = 1; i < coefficients.length; i++) {
+    double sum = 0;
+    trainingData.setClassIndex(trainingData.numAttributes() - 1);
 
-            // Goes through all instances
-            for (int j = 0; j < trainingData.numInstances(); j++) {
+        // Goes through all instances
+        for (int j = 0; j < trainingData.numInstances(); j++) {
 
-                double innerSum = coefficients[0];
+            double innerSum = coefficients[0]; // Holds theta * x
 
-                // Add products of all coefficients and all attributes (but the last) of current instance
-                for (int k = 0; k < trainingData.numAttributes() - 1; k++) {
-
-                    innerSum += coefficients[i] * trainingData.instance(j).value(k);
-
-                }
-
-                innerSum -= trainingData.instance(j).classValue();
-                innerSum *= trainingData.instance(j).value(i);
-
-                sum += innerSum;
-
+            // Add products of all coefficients and all attributes (but the Class Attribute) of current instance
+            for (int k = 1; k < trainingData.numAttributes(); k++) {
+                innerSum += coefficients[k] * trainingData.instance(j).value(k - 1);
             }
 
+            // Measures difference from actual value
+            innerSum -= trainingData.instance(j).classValue();
+
+            // Doubles by the weight that the derivative is by
+            innerSum *= trainingData.instance(j).value(i);
+
+            // Adds calculation of current instance to general sum
+            sum += innerSum;
 
         }
 
-        return sum;
+        return sum / trainingData.numInstances();
     }
 
     /**
