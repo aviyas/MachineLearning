@@ -25,6 +25,28 @@ public class LinearRegression extends Classifier{
         // TODO: scale features, normalize mean, choose learning rate
         trainingData.setClassIndex(trainingData.numAttributes() - 1);
 
+        // choose learning rate alpha
+
+        double[] trialCoefficients = null;
+        double minError = 100;
+        int alpha = 5;
+
+        for (int i = -17; i < 2; i++) {
+
+            m_alpha = Math.pow(3, i);
+
+            for (int j = 0; j < 20000; j++) {
+                trialCoefficients = gradientDescent(trainingData);
+            }
+
+            double error = calculateSE(trainingData, trialCoefficients);
+            if (error < minError) {
+                minError = error;
+                alpha = i;
+            }
+
+        }
+
     }
 
     private void setAlpha(){
