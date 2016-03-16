@@ -38,46 +38,38 @@ public class LinearRegression extends Classifier{
         // Print error
         System.out.println(calculateSE(trainingData));
 
-        // TODO: scale features, normalize mean, choose learning rate
+        // TODO: scale features, normalize mean
 
     }
 
     // Choose learning rate alpha:
-    private void setAlpha(Instances trainingData){
+    private void setAlpha(Instances trainingData) throws Exception {
 
         System.out.println("Setting Alpha....");
 
-        double[] trialCoefficients = null;
-        double minError = 100;
-        int pow = 5;
+        double minError = Integer.MAX_VALUE;
+        double curError;
+        int bestPow = 5;
 
 //        // 1. Try different values for alpha
 //        for (int i = -17; i < 2; i++) {
 //
 //            m_alpha = Math.pow(3, i);
 //
-//            try {
+//              // TODO: run gradientDescent 20,000 times
 //
-//            for (int j = 0; j < 20000; j++) {
-//                trialCoefficients = gradientDescent(trainingData);
-//            }
-//
-//            double error = calculateSE(trainingData, trialCoefficients);
+//            curError = calculateSE(trainingData);
 //            System.out.println("Tried with alpha 3^" + i + ", received error: " + error);
 //
-//            if (error < minError) {
-//                minError = error;
-//                pow = i;
-//            }
-//
-//            } catch (Exception e) {
-//                System.out.println("Exception in setAlpha: ");
-//                e.printStackTrace();
+        // Take the one with minimum error rate
+//            if (curError < minError) {
+//                minError = curError;
+//                bestPow = i;
 //            }
 //
 //        }
 
-        m_alpha = Math.pow(3, pow);
+        m_alpha = Math.pow(3, bestPow);
 
     }
 
@@ -166,7 +158,6 @@ public class LinearRegression extends Classifier{
      * Returns the prediction of a linear regression predictor with weights
      * given by coefficients on a single instance.
      * @param instance
-//     * @param coefficients
      * @return
      * @throws Exception
      */
@@ -185,7 +176,6 @@ public class LinearRegression extends Classifier{
      * Calculates the total squared error over the test data on a linear regression
      * predictor with weights given by coefficients.
      * @param data
- //    * @param coefficients
      * @return
      * @throws Exception
      */
