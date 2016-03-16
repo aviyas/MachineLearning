@@ -69,11 +69,11 @@ public class MainHW1 {
         Instances testing = homework.loadData("housing_training.txt");
 
         //train classifier
-        LinearRegression function = new LinearRegression();
-        function.buildClassifier(training);
+        LinearRegression regressionFunc = new LinearRegression();
+        regressionFunc.buildClassifier(training);
 
         //calculate error
-
+        //regressionFunc.calculateSE(testing, )
 
     }
 

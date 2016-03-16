@@ -17,13 +17,13 @@ public class LinearRegression extends Classifier{
     public void buildClassifier(Instances trainingData) throws Exception {
 
         trainingData = new Instances(trainingData);
-
         trainingData.setClassIndex(trainingData.numAttributes() - 1);
 
         m_ClassIndex = trainingData.classIndex();
+
         //since class attribute is also an attribuite we subtract 1
         m_truNumAttributes = trainingData.numAttributes() - 1;
-        setAlpha();
+        setAlpha(trainingData);
         m_coefficients = gradientDescent(trainingData);
 
         // Print coefficients
@@ -31,10 +31,15 @@ public class LinearRegression extends Classifier{
             System.out.println(m_coefficients[i]);
         }
 
-        // TODO: scale features, normalize mean, choose learning rate
-        // trainingData.setClassIndex(trainingData.numAttributes() - 1);
+        // Print error
+        System.out.println(calculateSE(trainingData, m_coefficients));
 
-        // Choose learning rate alpha:
+        // TODO: scale features, normalize mean, choose learning rate
+
+    }
+
+    // Choose learning rate alpha:
+    private void setAlpha(Instances trainingData){
 
         System.out.println("Setting Alpha....");
 
@@ -42,30 +47,33 @@ public class LinearRegression extends Classifier{
         double minError = 100;
         int pow = 5;
 
-        // 1. Try different values for alpha
-        for (int i = -17; i < 2; i++) {
-
-            m_alpha = Math.pow(3, i);
-
-            for (int j = 0; j < 20000; j++) {
-                trialCoefficients = gradientDescent(trainingData);
-            }
-
-            double error = calculateSE(trainingData, trialCoefficients);
-            System.out.println("Tried with alphpa 3^" + i + ", received error: " + error);
-
-            if (error < minError) {
-                minError = error;
-                pow = i;
-            }
-
-        }
+//        // 1. Try different values for alpha
+//        for (int i = -17; i < 2; i++) {
+//
+//            m_alpha = Math.pow(3, i);
+//
+//            try {
+//
+//            for (int j = 0; j < 20000; j++) {
+//                trialCoefficients = gradientDescent(trainingData);
+//            }
+//
+//            double error = calculateSE(trainingData, trialCoefficients);
+//            System.out.println("Tried with alpha 3^" + i + ", received error: " + error);
+//
+//            if (error < minError) {
+//                minError = error;
+//                pow = i;
+//            }
+//
+//            } catch (Exception e) {
+//                System.out.println("Exception in setAlpha: ");
+//                e.printStackTrace();
+//            }
+//
+//        }
 
         m_alpha = Math.pow(3, pow);
-
-    }
-
-    private void setAlpha(){
 
     }
 
@@ -187,10 +195,10 @@ public class LinearRegression extends Classifier{
 
         for (int i = 0; i < data.numAttributes(); i++) {
             cur = data.instance(i);
-            sum += Math.pow((cur.classValue() - regressionPrediction(cur, coefficients)), 2);
+            sum += Math.pow(Math.abs(cur.classValue() - regressionPrediction(cur, coefficients)), 2);
         }
 
-        return sum;
+        return sum / data.numAttributes();
     }
 
     /**
