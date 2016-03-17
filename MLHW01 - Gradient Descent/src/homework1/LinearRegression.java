@@ -107,9 +107,7 @@ public class LinearRegression extends Classifier{
             }
 
             // 3. Updates weights accordingly
-            for (int i = 0; i < coefficients.length; i++) {
-                coefficients[i] = roundCoefficients[i];
-            }
+            System.arraycopy(roundCoefficients, 0, coefficients, 0, coefficients.length);
 
             // 4. Calculates average squared error every 100 iterations to check improvement rate
             if (counter % 100 == 0) {
