@@ -20,10 +20,10 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="module-library" exported="">
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/Desktop/weka.jar!/" />
+          <root url="jar:///opt/homebrew-cask/Caskroom/weka/3.6.13/weka-3-6-13/weka.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
