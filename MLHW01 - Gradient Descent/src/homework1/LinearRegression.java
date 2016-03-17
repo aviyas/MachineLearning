@@ -165,6 +165,8 @@ public class LinearRegression extends Classifier{
     public double regressionPrediction(Instance instance) throws Exception {
 
         double result = -1;
+        // Add the bias.
+        double result = m_coefficients[0];
 
         for (int i = 1; i < instance.numAttributes(); i++) {
             result += m_coefficients[i] * instance.value(i - 1);
@@ -187,6 +189,7 @@ public class LinearRegression extends Classifier{
 
         for (int i = 0; i < data.numAttributes(); i++) {
             cur = data.instance(i);
+            Instance cur = data.instance(i);
             sum += Math.pow(cur.classValue() - regressionPrediction(cur), 2);
         }
 
