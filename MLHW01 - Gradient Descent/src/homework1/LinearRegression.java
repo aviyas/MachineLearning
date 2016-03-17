@@ -13,6 +13,7 @@ public class LinearRegression extends Classifier{
     private double[] m_coefficients;
     private double m_alpha;
 
+
     //the method which runs to train the linear regression predictor, i.e.
     //finds its weights.
     @Override
@@ -39,9 +40,6 @@ public class LinearRegression extends Classifier{
         for (int i = 0; i < m_coefficients.length; i++) {
             System.out.println(" tetha_" + i + ": " + m_coefficients[i]);
         }
-
-        // Print error
-        System.out.println(calculateSE(trainingData));
 
         // TODO: scale features, normalize mean
 
@@ -102,7 +100,9 @@ public class LinearRegression extends Classifier{
         double curAvgSqrErr = calculateSE(trainingData, coefficients);
         double improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
 
-        for (long counter = 1; improvement > 0.003 ; counter++) {
+        long counter;
+
+        for (counter = 1; improvement > 0.003 ; counter++) {
 
             // 2. Calculates new weights according to the gradient of the error function
             coefficients = gradientDecentIteration(coefficients, trainingData);
@@ -110,10 +110,12 @@ public class LinearRegression extends Classifier{
             // 4. Calculates average squared error every 100 iterations to check improvement rate
             if (counter % 100 == 0) {
                 prevAvgSqrErr = curAvgSqrErr;
-                curAvgSqrErr = calculateSE(trainingData);
+                curAvgSqrErr = calculateSE(trainingData, coefficients);
                 improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
             }
         }
+
+        System.out.printf("Ran for %d iterations\n", counter);
 
         return coefficients;
     }
@@ -174,7 +176,6 @@ public class LinearRegression extends Classifier{
      * @throws Exception
      */
     public double regressionPrediction(Instance instance) throws Exception {
-
         return regressionPrediction(instance, m_coefficients);
     }
 
@@ -227,4 +228,7 @@ public class LinearRegression extends Classifier{
         return 0;
     }
 
+    public double[] getCoefficients() {
+        return m_coefficients;
+    }
 }

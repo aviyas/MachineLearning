@@ -1,7 +1,14 @@
 package homework1;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -69,12 +76,20 @@ public class MainHW1 {
         LinearRegression regressionFunc = new LinearRegression();
         regressionFunc.buildClassifier(training);
 
+        Stream<String> lines = Stream.of("The weights for question 7 are:");
+
         // Write weights into "hw01.txt"
+        Stream<String> coeffs = Arrays.stream(regressionFunc.getCoefficients()).skip(1).mapToObj(Double::toString);
+        lines = Stream.concat(lines, coeffs);
 
         // Calculate error and display in "hw01.txt"
-        // regressionFunc.calculateSE(testing);
+        lines = Stream.concat(lines,
+                Stream.of(String.format("The error for question 7 is %f", regressionFunc.calculateSE(testing))));
 
-
+        try {
+            Files.write(Paths.get("hw1.txt"), lines.collect(Collectors.toList()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-
 }
