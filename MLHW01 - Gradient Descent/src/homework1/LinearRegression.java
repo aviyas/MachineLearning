@@ -128,8 +128,9 @@ public class LinearRegression extends Classifier{
      * @return
      */
     private double calculatePartialDerivative(Instances trainingData, double[] coefficients, int i) {
-
-    double sum = 0;
+        double sum = 0;
+        // Amir: Do we need to set the class index here?
+        trainingData.setClassIndex(trainingData.numAttributes() - 1);
 
         // Goes through all instances
         for (int j = 0; j < trainingData.numInstances(); j++) {
@@ -144,7 +145,9 @@ public class LinearRegression extends Classifier{
             // Measures difference from actual value
             innerSum -= trainingData.instance(j).classValue();
 
-            // Doubles by the weight that the derivative is calculated by
+            // AMIR: No need when i == 0 (Theta0)
+
+            // Doubles by the weight that the derivative is by
             innerSum *= trainingData.instance(j).value(i);
 
             // Adds calculation of current instance to general sum
