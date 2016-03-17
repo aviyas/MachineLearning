@@ -88,7 +88,7 @@ public class LinearRegression extends Classifier{
 
         // 1. Guess the weights
         for (int i = 0; i < coefficients.length; i++) {
-            coefficients[i] = Math.random();
+            coefficients[i] = 1;
         }
 
         // Improvement rate measurement variables
@@ -96,17 +96,19 @@ public class LinearRegression extends Classifier{
         double curAvgSqrErr = calculateSE(trainingData);
         double improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
 
-        for (int counter = 1; improvement > 0.003 ; counter++) {
+        for (long counter = 1; improvement > 0.003 ; counter++) {
+
+            double[] roundCoefficients = new double[m_truNumAttributes + 1];
 
             // 2. Calculates new weights according to the gradient of the error function
             for (int i = 0; i < coefficients.length; i++) {
                 double partialDerivative = calculatePartialDerivative(trainingData, coefficients, i);
-                m_coefficients[i] = coefficients[i] - (m_alpha * partialDerivative);
+                roundCoefficients[i] = coefficients[i] - m_alpha * partialDerivative;
             }
 
             // 3. Updates weights accordingly
             for (int i = 0; i < coefficients.length; i++) {
-                m_coefficients[i] = coefficients[i];
+                coefficients[i] = roundCoefficients[i];
             }
 
             // 4. Calculates average squared error every 100 iterations to check improvement rate
@@ -129,8 +131,6 @@ public class LinearRegression extends Classifier{
      */
     private double calculatePartialDerivative(Instances trainingData, double[] coefficients, int i) {
         double sum = 0;
-        // Amir: Do we need to set the class index here?
-        trainingData.setClassIndex(trainingData.numAttributes() - 1);
 
         // Goes through all instances
         for (int j = 0; j < trainingData.numInstances(); j++) {
@@ -145,12 +145,12 @@ public class LinearRegression extends Classifier{
             // Measures difference from actual value
             innerSum -= trainingData.instance(j).classValue();
 
-            // AMIR: No need when i == 0 (Theta0)
+            // Doubles by the weight that the derivative is calculated by (Don't multiple by x0 for the bias).
+            if (i > 0) {
+                innerSum *= trainingData.instance(j).value(i - 1);
+            }
 
-            // Doubles by the weight that the derivative is by
-            innerSum *= trainingData.instance(j).value(i);
-
-            // Adds calculation of current instance to general sum
+            // Adds calculation of current instance to the general sum.
             sum += innerSum;
 
         }
