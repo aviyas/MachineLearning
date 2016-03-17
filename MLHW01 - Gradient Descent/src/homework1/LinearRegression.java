@@ -24,7 +24,10 @@ public class LinearRegression extends Classifier{
         //since class attribute is also an attribuite we subtract 1
         m_truNumAttributes = trainingData.numAttributes() - 1;
 
+        System.out.println("Calculating alpha.");
         setAlpha(trainingData);
+        System.out.printf("Alpha = %f\n.", m_alpha);
+
 
         m_coefficients = new double[m_truNumAttributes + 1];
         m_coefficients = gradientDescent(trainingData);
@@ -42,35 +45,36 @@ public class LinearRegression extends Classifier{
 
     }
 
+    private static final int ITERATIONS_NUM = 20000;
+
     // Choose learning rate alpha:
     private void setAlpha(Instances trainingData) throws Exception {
+        double minError = Double.MAX_VALUE;
+        double[] coefficients = new double[m_truNumAttributes + 1];
 
-        System.out.println("Setting Alpha....");
+        double alpha = Double.MIN_VALUE;
 
-        double minError = Integer.MAX_VALUE;
-        double curError;
-        int bestPow = 5;
+        for (int i = 0; i < coefficients.length; i++) {
+            coefficients[i] = 1;
+        }
 
-//        // 1. Try different values for alpha
-//        for (int i = -17; i < 2; i++) {
-//
-//            m_alpha = Math.pow(3, i);
-//
-//              // TODO: run gradientDescent 20,000 times
-//
-//            curError = calculateSE(trainingData);
-//            System.out.println("Tried with alpha 3^" + i + ", received error: " + error);
-//
-        // Take the one with minimum error rate
-//            if (curError < minError) {
-//                minError = curError;
-//                bestPow = i;
-//            }
-//
-//        }
+        for (int i = -17; i < 2; i++)
+        {
+            m_alpha = Math.pow(3, -i);
 
-        m_alpha = Math.pow(3, bestPow);
+            for (int j = 0; j < ITERATIONS_NUM; j++) {
+                coefficients = gradientDecentIteration(coefficients, trainingData);
+            }
 
+            double error = calculateSE(trainingData, coefficients);
+
+            if (minError < error) {
+                minError = error;
+                alpha = m_alpha;
+            }
+        }
+
+        m_alpha = alpha;
     }
 
     /**
@@ -93,21 +97,13 @@ public class LinearRegression extends Classifier{
 
         // Improvement rate measurement variables
         double prevAvgSqrErr = 0;
-        double curAvgSqrErr = calculateSE(trainingData);
+        double curAvgSqrErr = calculateSE(trainingData, coefficients);
         double improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
 
         for (long counter = 1; improvement > 0.003 ; counter++) {
 
-            double[] roundCoefficients = new double[m_truNumAttributes + 1];
-
             // 2. Calculates new weights according to the gradient of the error function
-            for (int i = 0; i < coefficients.length; i++) {
-                double partialDerivative = calculatePartialDerivative(trainingData, coefficients, i);
-                roundCoefficients[i] = coefficients[i] - m_alpha * partialDerivative;
-            }
-
-            // 3. Updates weights accordingly
-            System.arraycopy(roundCoefficients, 0, coefficients, 0, coefficients.length);
+            coefficients = gradientDecentIteration(coefficients, trainingData);
 
             // 4. Calculates average squared error every 100 iterations to check improvement rate
             if (counter % 100 == 0) {
@@ -118,6 +114,23 @@ public class LinearRegression extends Classifier{
         }
 
         return coefficients;
+    }
+
+    /**
+     * Perform one iteration of gradient decent.
+     * @param coefficients
+     * @param trainingData
+     * @return
+     */
+    private double[] gradientDecentIteration(double[] coefficients, Instances trainingData) {
+        double[] roundCoefficients = new double[m_truNumAttributes + 1];
+
+        for (int i = 0; i < coefficients.length; i++) {
+            double partialDerivative = calculatePartialDerivative(trainingData, coefficients, i);
+            roundCoefficients[i] = coefficients[i] - m_alpha * partialDerivative;
+        }
+
+        return roundCoefficients;
     }
 
     /**
@@ -164,12 +177,15 @@ public class LinearRegression extends Classifier{
      */
     public double regressionPrediction(Instance instance) throws Exception {
 
-        double result = -1;
+        return regressionPrediction(instance, m_coefficients);
+    }
+
+    private static double regressionPrediction(Instance instance, double[] coefficients) throws Exception {
         // Add the bias.
-        double result = m_coefficients[0];
+        double result = coefficients[0];
 
         for (int i = 1; i < instance.numAttributes(); i++) {
-            result += m_coefficients[i] * instance.value(i - 1);
+            result += coefficients[i] * instance.value(i - 1);
         }
 
         return result;
@@ -184,13 +200,16 @@ public class LinearRegression extends Classifier{
      */
     public double calculateSE(Instances data) throws Exception {
 
+        return calculateSE(data, m_coefficients);
+    }
+
+    private static double calculateSE(Instances data, double[] coefficients) throws Exception {
+
         int sum = 0;
-        Instance cur;
 
         for (int i = 0; i < data.numAttributes(); i++) {
-            cur = data.instance(i);
             Instance cur = data.instance(i);
-            sum += Math.pow(cur.classValue() - regressionPrediction(cur), 2);
+            sum += Math.pow(cur.classValue() - regressionPrediction(cur, coefficients), 2);
         }
 
         return sum / (2 * data.numInstances());
