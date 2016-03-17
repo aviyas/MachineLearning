@@ -1,9 +1,6 @@
 package homework1;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import weka.core.Attribute;
@@ -62,11 +59,22 @@ public class MainHW1 {
     }
 
     public static void main(String[] args) throws Exception {
-        //load data
 
-        //train classifier
+        // Load data
+        MainHW1 homework = new MainHW1();
+        Instances training = homework.loadData("housing_training.txt");
+        Instances testing = homework.loadData("housing_training.txt");
 
-        //calculate error
+        // Train classifier
+        LinearRegression regressionFunc = new LinearRegression();
+        regressionFunc.buildClassifier(training);
+
+        // Write weights into "hw01.txt"
+
+        // Calculate error and display in "hw01.txt"
+        // regressionFunc.calculateSE(testing);
+
+
     }
 
 }

@@ -15,16 +15,61 @@ public class LinearRegression extends Classifier{
     //finds its weights.
     @Override
     public void buildClassifier(Instances trainingData) throws Exception {
+
         trainingData = new Instances(trainingData);
+        trainingData.setClassIndex(trainingData.numAttributes() - 1);
+
         m_ClassIndex = trainingData.classIndex();
+
         //since class attribute is also an attribuite we subtract 1
         m_truNumAttributes = trainingData.numAttributes() - 1;
-        setAlpha();
+
+        setAlpha(trainingData);
+
+        m_coefficients = new double[m_truNumAttributes + 1];
         m_coefficients = gradientDescent(trainingData);
+
+        // Print coefficients
+        System.out.println("Printing coefficients:");
+        for (int i = 0; i < m_coefficients.length; i++) {
+            System.out.println(" tetha_" + i + ": " + m_coefficients[i]);
+        }
+
+        // Print error
+        System.out.println(calculateSE(trainingData));
+
+        // TODO: scale features, normalize mean
 
     }
 
-    private void setAlpha(){
+    // Choose learning rate alpha:
+    private void setAlpha(Instances trainingData) throws Exception {
+
+        System.out.println("Setting Alpha....");
+
+        double minError = Integer.MAX_VALUE;
+        double curError;
+        int bestPow = 5;
+
+//        // 1. Try different values for alpha
+//        for (int i = -17; i < 2; i++) {
+//
+//            m_alpha = Math.pow(3, i);
+//
+//              // TODO: run gradientDescent 20,000 times
+//
+//            curError = calculateSE(trainingData);
+//            System.out.println("Tried with alpha 3^" + i + ", received error: " + error);
+//
+        // Take the one with minimum error rate
+//            if (curError < minError) {
+//                minError = curError;
+//                bestPow = i;
+//            }
+//
+//        }
+
+        m_alpha = Math.pow(3, bestPow);
 
     }
 
@@ -39,38 +84,43 @@ public class LinearRegression extends Classifier{
     public double[] gradientDescent(Instances trainingData)
             throws Exception {
 
-        double[] coefficients = new double[trainingData.numAttributes()];
+        double[] coefficients = new double[m_truNumAttributes + 1];
 
         // 1. Guess the weights
         for (int i = 0; i < coefficients.length; i++) {
-            coefficients[i] = Math.random();
+            coefficients[i] = 1;
         }
 
-        double avgSqrErr = calculateSE(trainingData, coefficients);
+        // Improvement rate measurement variables
+        double prevAvgSqrErr = 0;
+        double curAvgSqrErr = calculateSE(trainingData);
+        double improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
 
-        while (avgSqrErr > 0.03) {
+        for (long counter = 1; improvement > 0.003 ; counter++) {
 
-            double[] tempCoefficients = new double[coefficients.length];
+            double[] roundCoefficients = new double[m_truNumAttributes + 1];
 
             // 2. Calculates new weights according to the gradient of the error function
-            for (int i = 0; i < tempCoefficients.length; i++) {
+            for (int i = 0; i < coefficients.length; i++) {
                 double partialDerivative = calculatePartialDerivative(trainingData, coefficients, i);
-                tempCoefficients[i] = coefficients[i] - (m_alpha * partialDerivative);
+                roundCoefficients[i] = coefficients[i] - m_alpha * partialDerivative;
             }
 
             // 3. Updates weights accordingly
             for (int i = 0; i < coefficients.length; i++) {
-                coefficients[i] = tempCoefficients[i];
+                coefficients[i] = roundCoefficients[i];
             }
 
-            // 4. Calculates average squared avgSqrErr
-            avgSqrErr = calculateSE(trainingData, tempCoefficients);
+            // 4. Calculates average squared error every 100 iterations to check improvement rate
+            if (counter % 100 == 0) {
+                prevAvgSqrErr = curAvgSqrErr;
+                curAvgSqrErr = calculateSE(trainingData);
+                improvement = Math.abs(curAvgSqrErr - prevAvgSqrErr);
+            }
         }
 
         return coefficients;
     }
-
-    //
 
     /**
      * Calculates the derivative of the error function by the current weight.
@@ -81,8 +131,6 @@ public class LinearRegression extends Classifier{
      */
     private double calculatePartialDerivative(Instances trainingData, double[] coefficients, int i) {
         double sum = 0;
-        // Amir: Do we need to set the class index here?
-        trainingData.setClassIndex(trainingData.numAttributes() - 1);
 
         // Goes through all instances
         for (int j = 0; j < trainingData.numInstances(); j++) {
@@ -97,16 +145,15 @@ public class LinearRegression extends Classifier{
             // Measures difference from actual value
             innerSum -= trainingData.instance(j).classValue();
 
-            // AMIR: No need when i == 0 (Theta0)
+            // Doubles by the weight that the derivative is calculated by (Don't multiple by x0 for the bias).
+            if (i > 0) {
+                innerSum *= trainingData.instance(j).value(i - 1);
+            }
 
-            // Doubles by the weight that the derivative is by
-            innerSum *= trainingData.instance(j).value(i);
-
-            // Adds calculation of current instance to general sum
+            // Adds calculation of current instance to the general sum.
             sum += innerSum;
 
         }
-
         return sum / trainingData.numInstances();
     }
 
@@ -114,25 +161,38 @@ public class LinearRegression extends Classifier{
      * Returns the prediction of a linear regression predictor with weights
      * given by coefficients on a single instance.
      * @param instance
-     * @param coefficients
      * @return
      * @throws Exception
      */
-    public double regressionPrediction(Instance instance, double[] coefficients) throws Exception {
-        return 0;
+    public double regressionPrediction(Instance instance) throws Exception {
+
+        double result = -1;
+
+        for (int i = 1; i < instance.numAttributes(); i++) {
+            result += m_coefficients[i] * instance.value(i - 1);
+        }
+
+        return result;
     }
 
     /**
      * Calculates the total squared error over the test data on a linear regression
      * predictor with weights given by coefficients.
-     * @param testData
-     * @param coefficients
+     * @param data
      * @return
      * @throws Exception
      */
-    public double calculateSE(Instances testData, double[] coefficients) throws Exception {
+    public double calculateSE(Instances data) throws Exception {
 
-        return 0;
+        int sum = 0;
+        Instance cur;
+
+        for (int i = 0; i < data.numAttributes(); i++) {
+            cur = data.instance(i);
+            sum += Math.pow(cur.classValue() - regressionPrediction(cur), 2);
+        }
+
+        return sum / (2 * data.numInstances());
     }
 
     /**
