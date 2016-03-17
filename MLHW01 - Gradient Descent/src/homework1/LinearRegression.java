@@ -4,6 +4,8 @@ import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.util.Arrays;
+
 public class LinearRegression extends Classifier{
 
     private int m_ClassIndex;
@@ -60,7 +62,7 @@ public class LinearRegression extends Classifier{
 
         for (int i = -17; i < 2; i++)
         {
-            m_alpha = Math.pow(3, -i);
+            m_alpha = Math.pow(3, i);
 
             for (int j = 0; j < ITERATIONS_NUM; j++) {
                 coefficients = gradientDecentIteration(coefficients, trainingData);
@@ -68,7 +70,7 @@ public class LinearRegression extends Classifier{
 
             double error = calculateSE(trainingData, coefficients);
 
-            if (minError < error) {
+            if (error < minError) {
                 minError = error;
                 alpha = m_alpha;
             }
@@ -146,12 +148,8 @@ public class LinearRegression extends Classifier{
         // Goes through all instances
         for (int j = 0; j < trainingData.numInstances(); j++) {
 
-            double innerSum = coefficients[0]; // Holds theta * x
-
-            // Add products of all coefficients and all attributes (but the Class Attribute) of current instance
-            for (int k = 1; k < trainingData.numAttributes(); k++) {
-                innerSum += coefficients[k] * trainingData.instance(j).value(k - 1);
-            }
+            // Calculate h(x).
+            double innerSum = regressionPrediction(trainingData.instance(j), coefficients); // Holds theta * x
 
             // Measures difference from actual value
             innerSum -= trainingData.instance(j).classValue();
@@ -163,8 +161,8 @@ public class LinearRegression extends Classifier{
 
             // Adds calculation of current instance to the general sum.
             sum += innerSum;
-
         }
+
         return sum / trainingData.numInstances();
     }
 
@@ -180,7 +178,7 @@ public class LinearRegression extends Classifier{
         return regressionPrediction(instance, m_coefficients);
     }
 
-    private static double regressionPrediction(Instance instance, double[] coefficients) throws Exception {
+    private static double regressionPrediction(Instance instance, double[] coefficients) {
         // Add the bias.
         double result = coefficients[0];
 
@@ -204,10 +202,13 @@ public class LinearRegression extends Classifier{
     }
 
     private static double calculateSE(Instances data, double[] coefficients) throws Exception {
+        if (Arrays.stream(coefficients).anyMatch(Double::isNaN)) {
+            return Double.MAX_VALUE;
+        }
 
         int sum = 0;
 
-        for (int i = 0; i < data.numAttributes(); i++) {
+        for (int i = 0; i < data.numInstances(); i++) {
             Instance cur = data.instance(i);
             sum += Math.pow(cur.classValue() - regressionPrediction(cur, coefficients), 2);
         }
