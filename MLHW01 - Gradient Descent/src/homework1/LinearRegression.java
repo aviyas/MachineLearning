@@ -215,7 +215,7 @@ public class LinearRegression extends Classifier{
             sum += Math.pow(cur.classValue() - regressionPrediction(cur, coefficients), 2);
         }
 
-        return sum / (2 * data.numInstances());
+        return sum / data.numInstances();
     }
 
     /**
