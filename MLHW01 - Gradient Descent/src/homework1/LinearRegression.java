@@ -4,6 +4,7 @@ import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 public class LinearRegression extends Classifier{
@@ -55,7 +56,7 @@ public class LinearRegression extends Classifier{
         double alpha = Double.MIN_VALUE;
 
         for (int i = 0; i < coefficients.length; i++) {
-            coefficients[i] = 1;
+            coefficients[i] = Math.random();
         }
 
         for (int i = -17; i < 2; i++)
@@ -92,7 +93,7 @@ public class LinearRegression extends Classifier{
 
         // 1. Guess the weights
         for (int i = 0; i < coefficients.length; i++) {
-            coefficients[i] = 1;
+            coefficients[i] = Math.random();
         }
 
         // Improvement rate measurement variables
