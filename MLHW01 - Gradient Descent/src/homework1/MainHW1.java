@@ -70,7 +70,7 @@ public class MainHW1 {
         // Load data
         MainHW1 homework = new MainHW1();
         Instances training = homework.loadData("housing_training.txt");
-        Instances testing = homework.loadData("housing_training.txt");
+        Instances testing = homework.loadData("housing_testing.txt");
 
         // Train classifier
         LinearRegression regressionFunc = new LinearRegression();
@@ -82,9 +82,13 @@ public class MainHW1 {
         Stream<String> coeffs = Arrays.stream(regressionFunc.getCoefficients()).skip(1).mapToObj(Double::toString);
         lines = Stream.concat(lines, coeffs);
 
+        double se = regressionFunc.calculateSE(testing);
+
+        System.out.printf("SE: %f\n" ,se);
+
         // Calculate error and display in "hw01.txt"
         lines = Stream.concat(lines,
-                Stream.of(String.format("The error for question 7 is %f", regressionFunc.calculateSE(testing))));
+                Stream.of(String.format("The error for question 7 is %f", se)));
 
         try {
             Files.write(Paths.get("hw1.txt"), lines.collect(Collectors.toList()));

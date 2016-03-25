@@ -53,18 +53,24 @@ public class LinearRegression extends Classifier{
         double minError = Double.MAX_VALUE;
         double[] coefficients = new double[m_truNumAttributes + 1];
 
-        double alpha = Double.MIN_VALUE;
+        double alpha = Math.pow(3, -20);
 
-        for (int i = 0; i < coefficients.length; i++) {
-            coefficients[i] = Math.random();
-        }
+        for (int i = -25; i < 2; i++) {
+            for (int t = 0; t < coefficients.length; t++) {
+                coefficients[t] = Math.random();
+            }
 
-        for (int i = -17; i < 2; i++)
-        {
             m_alpha = Math.pow(3, i);
 
             for (int j = 0; j < ITERATIONS_NUM; j++) {
                 coefficients = gradientDecentIteration(coefficients, trainingData);
+                if (Arrays.stream(coefficients).anyMatch(Double::isNaN)) {
+                    break;
+                }
+            }
+
+            if (Arrays.stream(coefficients).anyMatch(Double::isNaN)) {
+                continue;
             }
 
             double error = calculateSE(trainingData, coefficients);
@@ -103,7 +109,7 @@ public class LinearRegression extends Classifier{
 
         long counter;
 
-        for (counter = 1; improvement > 0.003 ; counter++) {
+        for (counter = 1; improvement > 0.000003 ; counter++) {
 
             // 2. Calculates new weights according to the gradient of the error function
             coefficients = gradientDecentIteration(coefficients, trainingData);
@@ -132,7 +138,7 @@ public class LinearRegression extends Classifier{
 
         for (int i = 0; i < coefficients.length; i++) {
             double partialDerivative = calculatePartialDerivative(trainingData, coefficients, i);
-            roundCoefficients[i] = coefficients[i] - m_alpha * partialDerivative;
+            roundCoefficients[i] = coefficients[i] - (m_alpha * partialDerivative);
         }
 
         return roundCoefficients;
@@ -151,19 +157,18 @@ public class LinearRegression extends Classifier{
         // Goes through all instances
         for (int j = 0; j < trainingData.numInstances(); j++) {
 
-            // Calculate h(x).
-            double innerSum = regressionPrediction(trainingData.instance(j), coefficients); // Holds theta * x
+            Instance instance = trainingData.instance(j);
 
-            // Measures difference from actual value
-            innerSum -= trainingData.instance(j).classValue();
+            // Calculate h(x).
+            double h = regressionPrediction(instance, coefficients); // Holds theta * x
+            double y = instance.classValue();
 
             // Doubles by the weight that the derivative is calculated by (Don't multiple by x0 for the bias).
             if (i > 0) {
-                innerSum *= trainingData.instance(j).value(i - 1);
+                sum += (h - y) * instance.value(i - 1);
+            } else {
+                sum += h - y;
             }
-
-            // Adds calculation of current instance to the general sum.
-            sum += innerSum;
         }
 
         return sum / trainingData.numInstances();
@@ -208,7 +213,7 @@ public class LinearRegression extends Classifier{
             return Double.MAX_VALUE;
         }
 
-        int sum = 0;
+        double sum = 0;
 
         for (int i = 0; i < data.numInstances(); i++) {
             Instance cur = data.instance(i);
