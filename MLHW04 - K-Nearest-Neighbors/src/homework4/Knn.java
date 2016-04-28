@@ -104,7 +104,7 @@ public class Knn extends Classifier {
 			allData.put(distance(currentInstance, newInstance), currentInstance);
 		}
 
-		// 2. Find k mappings with minimal key value
+		// 2. Finds k mappings with lowest key value
 		HashMap<Double, Instance> nearestNeighbors = new HashMap<Double, Instance>();
 		Double currentMinValue = 0.0;
 		Instance currentMinInstance;
@@ -112,6 +112,8 @@ public class Knn extends Classifier {
 		for (int j = 0; j < k; j++) {
 			currentMinValue = Collections.min(nearestNeighbors.keySet());
 			currentMinInstance = nearestNeighbors.get(currentMinValue);
+			nearestNeighbors.put(currentMinValue, currentMinInstance);
+			allData.remove(currentMinValue, currentMinInstance);
 		}
 
 		return nearestNeighbors;
