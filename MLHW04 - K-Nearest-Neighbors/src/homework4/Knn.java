@@ -1,13 +1,19 @@
 package homework4;
 
 import weka.classifiers.Classifier;
+import weka.core.InstanceComparator;
 import weka.core.Instances;
+import weka.core.Instance;
+
+import java.util.HashMap;
 
 
 public class Knn extends Classifier {
 
 	private String M_MODE = "";
 	Instances m_trainingInstances;
+	int k;
+	int p;
 
 	public String getM_MODE() {
 		return M_MODE;
@@ -16,6 +22,7 @@ public class Knn extends Classifier {
 	public void setM_MODE(String m_MODE) {
 		M_MODE = m_MODE;
 	}
+
 
 	@Override
 	public void buildClassifier(Instances arg0) throws Exception {
@@ -34,15 +41,126 @@ public class Knn extends Classifier {
 			break;
 		}
 	}
-	
+
+	/**
+	 * Trains the algorithm using the Edited-Knn Forwards Algorithm shown in class.
+	 * @param instances - the training data.
+     */
 	private void editedForward(Instances instances) {
 	}
-	
+
+	/**
+	 * Trains the algorithm using the Edited-Knn Backwards Algorithm shown in class.
+	 * @param instances - the training data.
+	 */
 	private void editedBackward(Instances instances) {
 	}
-	
+
+	/**
+	 * Trains the algorithm using the Standard Knn Algorithm shown in class, storing all of the instances in memory.
+	 * @param instances - the training data.
+     */
 	private void noEdit(Instances instances) {
 		m_trainingInstances = new Instances(instances);
+	}
+
+	/**
+	 * Predicts the class value of a given instance.
+	 * @param newInstance to classify.
+	 * @return the classification.
+     */
+	public int classify(Instance newInstance) {
+
+		return -1;
+	}
+
+	/**
+	 * Finds the given k nearest neighbors of a given instance.
+	 * @param newInstance
+	 * @return k nearest neighbors and their distances.
+     */
+	public HashMap<Instance, Double> findNearestNeighbors(Instance newInstance) {
+
+		return null;
+	}
+
+
+	/**
+	 * Takes a vote on what the class of the neighbors are and determines the final result accordingly.
+	 * @param nearestNeighbors - a list of k nearest neighbors.
+	 * @return the class value with the most votes.
+     */
+	public int getClassVoteResult(HashMap<Instance, Double> nearestNeighbors) {
+
+		return -1;
+	}
+
+
+	/**
+	 * Takes a vote on what the class of the neighbors are, weighted according with their distances from the newInstance,
+	 * and determines the final result accordingly.
+	 * @param nearestNeighbors
+	 * @return the class value with the most votes.
+     */
+	public int getWeightedClassVoteResult(HashMap<Instance, Double> nearestNeighbors) {
+
+		// Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
+
+		return -1;
+	}
+
+	/**
+	 * Calculates the distance between two instances, based on the chosen distance function.
+	 * @param thingOne first instance
+	 * @param thingTwo second instance
+     * @return the distance between the instances.
+     */
+	public Double distance(Instance thingOne, Instance thingTwo) {
+
+
+		return -1.0;
+	}
+
+	/**
+	 * Calculates the l-p distance between two instances.
+	 * @param thingOne first instance
+	 * @param thingTwo second instance
+	 * @return the l-p distance between the instances.
+	 */
+	public Double lPdistance(Instance thingOne, Instance thingTwo) {
+
+		return -1.0;
+	}
+
+	/**
+	 * Calculates the l-infinity distance between two instances.
+	 * @param thingOne first instance
+	 * @param thingTwo second instance
+	 * @return the l-infinity distance between the instances.
+     */
+	public Double lInfinityDistance(Instance thingOne, Instance thingTwo) {
+
+		return -1.0;
+	}
+
+	/**
+	 * Calculates the average error on given dataset.
+	 * @param dataset of instances.
+	 * @return the error on the dataset.
+     */
+	public Double calcAverageError(Instances dataset) {
+
+		return -1.0;
+	}
+
+	/**
+	 * Calculates the Cross Validation Error, using 10 folds.
+	 * @param dataset of instances.
+	 * @return the cross validation error on the dataset.
+     */
+	public Double crossValidationError(Instance dataset) {
+
+		return -1.0;
 	}
 
 }
