@@ -5,6 +5,8 @@ import weka.core.InstanceComparator;
 import weka.core.Instances;
 import weka.core.Instance;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 
@@ -25,6 +27,9 @@ public class Knn extends Classifier {
 		M_MODE = m_MODE;
 	}
 
+	public String getVotingMethod() { return votingMethod; }
+
+	public void setVotingMethod(String votingMethod) { this.votingMethod = votingMethod; }
 
 	@Override
 	public void buildClassifier(Instances arg0) throws Exception {
@@ -73,7 +78,7 @@ public class Knn extends Classifier {
      */
 	public int classify(Instance newInstance) {
 
-		HashMap<Instance, Double> nearestNeighbors = findNearestNeighbors(newInstance);
+		HashMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
 
 		if (votingMethod.equals("weighted")) {
 			return getWeightedClassVoteResult(nearestNeighbors);
@@ -84,22 +89,40 @@ public class Knn extends Classifier {
 	}
 
 	/**
-	 * Finds the given k nearest neighbors of a given instance.
+	 * Finds the given k nearest neighbors of a given instance, using a K-d Tree structure.
 	 * @param newInstance
 	 * @return k nearest neighbors and their distances.
      */
-	public HashMap<Instance, Double> findNearestNeighbors(Instance newInstance) {
+	public HashMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
 
-		return null;
+		HashMap<Double, Instance> allData = new HashMap<Double, Instance>();
+
+		// 1. Calculates the distance from all instances and put in a HashMap
+		Instance currentInstance;
+		for (int i = 0; i < m_trainingInstances.numInstances(); i++) {
+			currentInstance = m_trainingInstances.instance(i);
+			allData.put(distance(currentInstance, newInstance), currentInstance);
+		}
+
+		// 2. Find k mappings with minimal key value
+		HashMap<Double, Instance> nearestNeighbors = new HashMap<Double, Instance>();
+		Double currentMinValue = 0.0;
+		Instance currentMinInstance;
+
+		for (int j = 0; j < k; j++) {
+			currentMinValue = Collections.min(nearestNeighbors.keySet());
+			currentMinInstance = nearestNeighbors.get(currentMinValue);
+		}
+
+		return nearestNeighbors;
 	}
-
 
 	/**
 	 * Takes a vote on what the class of the neighbors are and determines the final result accordingly.
 	 * @param nearestNeighbors - a list of k nearest neighbors.
 	 * @return the class value with the most votes.
      */
-	public int getClassVoteResult(HashMap<Instance, Double> nearestNeighbors) {
+	public int getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
 		return -1;
 	}
@@ -111,7 +134,7 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors
 	 * @return the class value with the most votes.
      */
-	public int getWeightedClassVoteResult(HashMap<Instance, Double> nearestNeighbors) {
+	public int getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
 		// Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
 
@@ -171,5 +194,6 @@ public class Knn extends Classifier {
 
 		return -1.0;
 	}
+
 
 }
