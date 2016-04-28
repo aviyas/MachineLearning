@@ -1,4 +1,4 @@
-package hw4;
+package homework4;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
