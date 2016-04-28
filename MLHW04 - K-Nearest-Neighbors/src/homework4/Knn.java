@@ -12,8 +12,10 @@ public class Knn extends Classifier {
 
 	private String M_MODE = "";
 	Instances m_trainingInstances;
+
 	int k;
 	int p;
+	String votingMethod = "";
 
 	public String getM_MODE() {
 		return M_MODE;
@@ -71,7 +73,14 @@ public class Knn extends Classifier {
      */
 	public int classify(Instance newInstance) {
 
-		return -1;
+		HashMap<Instance, Double> nearestNeighbors = findNearestNeighbors(newInstance);
+
+		if (votingMethod.equals("weighted")) {
+			return getWeightedClassVoteResult(nearestNeighbors);
+		} else {
+			return getClassVoteResult(nearestNeighbors);
+		}
+
 	}
 
 	/**
