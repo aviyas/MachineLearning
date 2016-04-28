@@ -1,15 +1,8 @@
-package homework2;
+package MLHW02;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.Enumeration;
-
-import weka.attributeSelection.ChiSquaredAttributeEval;
-import weka.core.Attribute;
-import weka.core.Instance;
-import weka.core.Instances;
 
 public class TreeDriver {
 
