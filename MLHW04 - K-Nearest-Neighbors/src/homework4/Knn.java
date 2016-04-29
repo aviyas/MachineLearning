@@ -94,8 +94,8 @@ public class Knn extends Classifier {
 	}
 
 	/**
-	 * Finds the given k nearest neighbors of a given instance, using a K-d Tree structure.
-	 * @param newInstance
+	 * Finds the given k nearest neighbors of a given instance, using the standard method.
+	 * @param newInstance to be examined.
 	 * @return k nearest neighbors and their distances.
      */
 	public HashMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
@@ -126,7 +126,7 @@ public class Knn extends Classifier {
 
 	/**
 	 * Takes a vote on what the class of the neighbors are and determines the final result accordingly.
-	 * @param nearestNeighbors - a list of k nearest neighbors.
+	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
 	public double getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
@@ -158,18 +158,17 @@ public class Knn extends Classifier {
 		return vote;
 	}
 
-
 	/**
 	 * Takes a vote on what the class of the neighbors are, weighted according with their distances from the newInstance,
 	 * and determines the final result accordingly.
-	 * @param nearestNeighbors
+	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
 	public double getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
 
 		// 1. Creates mappings of possible class values and their rating
-		HashMap<Double, Double> ratings = new HashMap<Double, Double>();
+		HashMap<Double, Double> rater = new HashMap<Double, Double>();
 
 		Instance currentNeighbor;
 		Double currentClassValue;
@@ -179,19 +178,19 @@ public class Knn extends Classifier {
 		for (Double distance : nearestNeighbors.keySet()) {
 			currentNeighbor = nearestNeighbors.get(distance);
 			currentClassValue = currentNeighbor.classValue();
-			currentRate = ratings.getOrDefault(currentClassValue, 0.0);
+			currentRate = rater.getOrDefault(currentClassValue, 0.0);
 
 			// Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
 			addedRate = 1 / Math.pow(distance, 2);
-			ratings.put(currentClassValue, currentRate + addedRate);
+			rater.put(currentClassValue, currentRate + addedRate);
 		}
 
 		double maxRate = 0;
 		double vote = -1;
 
 		// 2. Finds maximum among mappings
-		for (Double classValue : ratings.keySet()) {
-			currentRate = ratings.get(classValue);
+		for (Double classValue : rater.keySet()) {
+			currentRate = rater.get(classValue);
 			if (currentRate > maxRate) {
 				maxRate = currentRate;
 				vote = classValue;
@@ -199,7 +198,6 @@ public class Knn extends Classifier {
 		}
 
 		return vote;
-
 	}
 
 	/**
@@ -220,9 +218,27 @@ public class Knn extends Classifier {
 	 * @param thingTwo second instance
 	 * @return the l-p distance between the instances.
 	 */
-	public Double lPdistance(Instance thingOne, Instance thingTwo) {
+	public double lPdistance(Instance thingOne, Instance thingTwo) {
 
-		return -1.0;
+		double distance = 0;
+
+		for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
+			distance += Math.pow(thingOne.value(i) - thingTwo.value(i), p);
+		}
+
+		distance = root(distance, p);
+
+		return distance;
+	}
+
+	/**
+	 * Calculates the nth root of a number.
+	 * @param number the value under the root.
+	 * @param n the degree of the calculation.
+     * @return the nth root of value.
+     */
+	private double root(double number, double n) {
+		return Math.pow(Math.E, Math.log(number) / n);
 	}
 
 	/**
@@ -231,7 +247,7 @@ public class Knn extends Classifier {
 	 * @param thingTwo second instance
 	 * @return the l-infinity distance between the instances.
      */
-	public Double lInfinityDistance(Instance thingOne, Instance thingTwo) {
+	public double lInfinityDistance(Instance thingOne, Instance thingTwo) {
 
 		return -1.0;
 	}
