@@ -137,8 +137,8 @@ public class Knn extends Classifier {
 		Double currentClassValue;
 		Integer currentCount;
 
-		for (Instance currentInstance : nearestNeighbors.values()) {
-			currentClassValue = currentInstance.classValue();
+		for (Instance neighbor : nearestNeighbors.values()) {
+			currentClassValue = neighbor.classValue();
 			currentCount = counter.getOrDefault(currentClassValue, 0);
 			counter.put(currentClassValue, currentCount + 1);
 		}
@@ -167,9 +167,39 @@ public class Knn extends Classifier {
      */
 	public double getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
-		// Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
 
-		return -1.0;
+		// 1. Creates mappings of possible class values and their rating
+		HashMap<Double, Double> ratings = new HashMap<Double, Double>();
+
+		Instance currentNeighbor;
+		Double currentClassValue;
+		Double currentRate;
+		Double addedRate;
+
+		for (Double distance : nearestNeighbors.keySet()) {
+			currentNeighbor = nearestNeighbors.get(distance);
+			currentClassValue = currentNeighbor.classValue();
+			currentRate = ratings.getOrDefault(currentClassValue, 0.0);
+
+			// Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
+			addedRate = 1 / Math.pow(distance, 2);
+			ratings.put(currentClassValue, currentRate + addedRate);
+		}
+
+		double maxRate = 0;
+		double vote = -1;
+
+		// 2. Finds maximum among mappings
+		for (Double classValue : ratings.keySet()) {
+			currentRate = ratings.get(classValue);
+			if (currentRate > maxRate) {
+				maxRate = currentRate;
+				vote = classValue;
+			}
+		}
+
+		return vote;
+
 	}
 
 	/**
