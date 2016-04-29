@@ -4,6 +4,8 @@ import weka.classifiers.Classifier;
 import weka.core.InstanceComparator;
 import weka.core.Instances;
 import weka.core.Instance;
+import weka.core.Attribute;
+
 
 import java.util.Collection;
 import java.util.Collections;
@@ -33,6 +35,9 @@ public class Knn extends Classifier {
 
 	@Override
 	public void buildClassifier(Instances arg0) throws Exception {
+
+		m_trainingInstances.setClassIndex(m_trainingInstances.numAttributes() - 1);
+
 		switch (M_MODE){
 		case "none":
 			noEdit(arg0);
@@ -76,7 +81,7 @@ public class Knn extends Classifier {
 	 * @param newInstance to classify.
 	 * @return the classification.
      */
-	public int classify(Instance newInstance) {
+	public double classify(Instance newInstance) {
 
 		HashMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
 
@@ -104,7 +109,7 @@ public class Knn extends Classifier {
 			allData.put(distance(currentInstance, newInstance), currentInstance);
 		}
 
-		// 2. Finds k mappings with lowest key value
+		// 2. Finds k mappings with k lowest key values
 		HashMap<Double, Instance> nearestNeighbors = new HashMap<Double, Instance>();
 		Double currentMinValue = 0.0;
 		Instance currentMinInstance;
@@ -124,9 +129,33 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors - a list of k nearest neighbors.
 	 * @return the class value with the most votes.
      */
-	public int getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
+	public double getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
-		return -1;
+		// 1. Creates mappings of possible class values and their count
+		HashMap<Double, Integer> counter = new HashMap<Double, Integer>();
+
+		Double currentClassValue;
+		Integer currentCount;
+
+		for (Instance currentInstance : nearestNeighbors.values()) {
+			currentClassValue = currentInstance.classValue();
+			currentCount = counter.getOrDefault(currentClassValue, 0);
+			counter.put(currentClassValue, currentCount + 1);
+		}
+
+		int maxCount = 0;
+		double vote = -1;
+
+		// 2. Finds maximum among mappings
+		for (Double classValue : counter.keySet()) {
+			currentCount = counter.get(classValue);
+			if (currentCount > maxCount) {
+				maxCount = currentCount;
+				vote = classValue;
+			}
+		}
+
+		return vote;
 	}
 
 
@@ -136,11 +165,11 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors
 	 * @return the class value with the most votes.
      */
-	public int getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
+	public double getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
 		// Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
 
-		return -1;
+		return -1.0;
 	}
 
 	/**
