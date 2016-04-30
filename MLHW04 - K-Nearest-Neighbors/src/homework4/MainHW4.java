@@ -43,10 +43,21 @@ public class MainHW4 {
 		Instances glassData = homework.loadData("glass.txt");
 		Instances cancerData = homework.loadData("cancer.txt");
 
-		// 2. Prints the cross validation error with the best parameters for the both glass and cancer data.
+		// 2. Prints the cross validation error with the best parameters for the both -
 
+		// 2.1. Glass data
 		double[] bestParams = homework.findBestParameters(glassData);
 
+		System.out.println("Best parameters for glass.txt are: ");
+		System.out.println("1. k = " + bestParams[0]);
+		System.out.println("2. p = " + bestParams[1]);
+		System.out.println("3. votingMethod = " + bestParams[2]);
+		System.out.println("With lowest Cross Validation Error of " + bestParams[3]);
+
+		// 2.2. Cancer data
+		bestParams = homework.findBestParameters(cancerData);
+
+		System.out.println("Best parameters for cancer.txt are: ");
 		System.out.println("1. k = " + bestParams[0]);
 		System.out.println("2. p = " + bestParams[1]);
 		System.out.println("3. votingMethod = " + bestParams[2]);

@@ -1,14 +1,9 @@
 package homework4;
 
-import com.sun.tools.doclint.HtmlTag;
 import weka.classifiers.Classifier;
-import weka.core.InstanceComparator;
 import weka.core.Instances;
 import weka.core.Instance;
-import weka.core.Attribute;
 
-
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -18,26 +13,26 @@ public class Knn extends Classifier {
 	private String M_MODE = "";
 	Instances m_trainingInstances;
 
-	int k;
-	int p;
-	String votingMethod = "";
+	double k;
+	double p;
+	double votingMethod;
 
-	public String getM_MODE() {
-		return M_MODE;
-	}
+	public String getM_MODE() { return M_MODE; }
 
 	public void setM_MODE(String m_MODE) {
 		M_MODE = m_MODE;
 	}
 
-	public String getVotingMethod() { return votingMethod; }
-
-	public void setVotingMethod(String votingMethod) { this.votingMethod = votingMethod; }
+	public void setParameters(double k, double p, double votingMethod) {
+		this.k = k;
+		this.p = p;
+		this.votingMethod = votingMethod;
+	}
 
 	@Override
 	public void buildClassifier(Instances arg0) throws Exception {
 
-		m_trainingInstances.setClassIndex(m_trainingInstances.numAttributes() - 1);
+//		m_trainingInstances.setClassIndex(m_trainingInstances.numAttributes() - 1);
 
 		switch (M_MODE){
 		case "none":
@@ -57,21 +52,21 @@ public class Knn extends Classifier {
 
 	/**
 	 * Trains the algorithm using the Edited-Knn Forwards Algorithm shown in class.
-	 * @param instances - the training data.
+	 * @param instances of training data.
      */
 	private void editedForward(Instances instances) {
 	}
 
 	/**
 	 * Trains the algorithm using the Edited-Knn Backwards Algorithm shown in class.
-	 * @param instances - the training data.
+	 * @param instances of training data.
 	 */
 	private void editedBackward(Instances instances) {
 	}
 
 	/**
 	 * Trains the algorithm using the Standard Knn Algorithm shown in class, storing all of the instances in memory.
-	 * @param instances - the training data.
+	 * @param instances of training data.
      */
 	private void noEdit(Instances instances) {
 		m_trainingInstances = new Instances(instances);
@@ -86,7 +81,7 @@ public class Knn extends Classifier {
 
 		HashMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
 
-		if (votingMethod.equals("weighted")) {
+		if (votingMethod == 1) {
 			return getWeightedClassVoteResult(nearestNeighbors);
 		} else {
 			return getClassVoteResult(nearestNeighbors);
@@ -221,7 +216,6 @@ public class Knn extends Classifier {
 		for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
 			distance += Math.pow(thingOne.value(i) - thingTwo.value(i), p);
 		}
-
 		return root(distance, p);
 	}
 
@@ -249,9 +243,7 @@ public class Knn extends Classifier {
 		// Takes the maximum difference measured between all attributes
 		for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
 			currentDistance = Math.abs(thingOne.value(i) - thingTwo.value(i));
-			if (currentDistance > maxDistance) {
-				maxDistance = currentDistance;
-			}
+			maxDistance = (currentDistance > maxDistance) ? currentDistance : maxDistance;
 		}
 		return maxDistance;
 	}
@@ -276,17 +268,16 @@ public class Knn extends Classifier {
 	 * @param dataset of instances.
 	 * @return the cross validation error on the dataset.
      */
-	public double crossValidationError(Instances dataset) {
+	public double crossValidationError(Instances dataset) throws Exception {
 
 		double error = 0;
 		Instances[] splitData;
 
 		for (int i = 0; i < 10; i++) {
 			splitData = splitDataBy(dataset, i);
-			m_trainingInstances = splitData[0];
+			buildClassifier(splitData[0]);
 			error += calcAverageError(splitData[1]);
 		}
-
 		return error / 10;
 	}
 
