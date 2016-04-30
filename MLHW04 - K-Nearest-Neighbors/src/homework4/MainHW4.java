@@ -35,8 +35,10 @@ public class MainHW4 {
 		return data;
 	}
 
-
 	public static void main (String [] args) throws Exception {
+
+		System.out.println("Working Directory = " +
+				System.getProperty("user.dir"));
 
 		// 1. Loads data
 		MainHW4 homework = new MainHW4();
@@ -78,7 +80,7 @@ public class MainHW4 {
      */
 	private double[] findBestParameters(Instances data) throws Exception {
 
-		double[] bestParams = new double[3];
+		double[] bestParams = new double[4];
 		Knn knn = new Knn();
 
 		for (int k = 1; k <= 30; k++) {
@@ -93,8 +95,8 @@ public class MainHW4 {
 					knn.buildClassifier(data);
 
 					// Sets best parameters to those with lowest error
-					if (knn.crossValidationError(data) > bestParams[4]) {
-						bestParams[4] = knn.crossValidationError(data);
+					if (knn.crossValidationError(data) > bestParams[3]) {
+						bestParams[3] = knn.crossValidationError(data);
 						bestParams[0] = k;
 						bestParams[1] = p;
 						bestParams[2] = votingMethod;
