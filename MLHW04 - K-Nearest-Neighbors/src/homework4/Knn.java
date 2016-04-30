@@ -1,5 +1,6 @@
 package homework4;
 
+import com.sun.tools.doclint.HtmlTag;
 import weka.classifiers.Classifier;
 import weka.core.InstanceComparator;
 import weka.core.Instances;
@@ -206,10 +207,56 @@ public class Knn extends Classifier {
 	 * @param thingTwo second instance
      * @return the distance between the instances.
      */
-	public Double distance(Instance thingOne, Instance thingTwo) {
+	public double distance(Instance thingOne, Instance thingTwo) {
 
+		double distance = 0;
 
-		return -1.0;
+		// Calculates distance according with p value and attribute type
+		if (thingOne.attribute(0).isNumeric()) {
+			distance = (Double.isFinite(p)) ? lPDistance(thingOne, thingTwo) : lInfinityDistance(thingOne, thingTwo);
+		} else {
+			distance = valueDifferenceMeasureDistance(thingOne, thingTwo);
+		}
+
+		return distance;
+	}
+
+	/**
+	 * Calculates the distance between two instances with non-numeric attributes.
+	 * @param thingOne first instance
+	 * @param thingTwo second instance
+     * @return the difference measure distance between the instances.
+     */
+	private double valueDifferenceMeasureDistance(Instance thingOne, Instance thingTwo) {
+
+		double distance = 0;
+		Attribute classAttribute = thingOne.classAttribute();
+
+		for (int i = 0; i < classAttribute.numValues(); i++) {
+			distance += (aposterioriProbability(classAttribute.value(i), thingOne) -
+							aposterioriProbability(classAttribute.value(i), thingTwo));
+		}
+		return distance;
+	}
+
+	/**
+	 * Calculates the a posteriori probability of a given class value if instance is thingOne, using the bayes formula.
+	 * @param classValue the given value.
+	 * @param thingOne the given instance.
+     * @return probability (A = classValue | x = thingOne).
+     */
+	private double aposterioriProbability(String classValue, Instance thingOne) {
+		double classPriorProbability = 0;
+		double instancePriorProbability = 0;
+		double likelihood = 0;
+
+		// Estimates P(Ai) based on the training set
+
+		// Estimates P(xj) based on the training set
+
+		// Estimates P(xj | Ai) = p(xj and Ai) / P(Ai) based on the training set
+
+		return ((likelihood * classPriorProbability) / instancePriorProbability);
 	}
 
 	/**
@@ -218,7 +265,7 @@ public class Knn extends Classifier {
 	 * @param thingTwo second instance
 	 * @return the l-p distance between the instances.
 	 */
-	public double lPdistance(Instance thingOne, Instance thingTwo) {
+	public double lPDistance(Instance thingOne, Instance thingTwo) {
 
 		double distance = 0;
 
@@ -226,9 +273,7 @@ public class Knn extends Classifier {
 			distance += Math.pow(thingOne.value(i) - thingTwo.value(i), p);
 		}
 
-		distance = root(distance, p);
-
-		return distance;
+		return root(distance, p);
 	}
 
 	/**
