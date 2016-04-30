@@ -91,7 +91,6 @@ public class Knn extends Classifier {
 		} else {
 			return getClassVoteResult(nearestNeighbors);
 		}
-
 	}
 
 	/**
@@ -121,7 +120,6 @@ public class Knn extends Classifier {
 			nearestNeighbors.put(currentMinValue, currentMinInstance);
 			allData.remove(currentMinValue, currentMinInstance);
 		}
-
 		return nearestNeighbors;
 	}
 
@@ -155,7 +153,6 @@ public class Knn extends Classifier {
 				vote = classValue;
 			}
 		}
-
 		return vote;
 	}
 
@@ -197,7 +194,6 @@ public class Knn extends Classifier {
 				vote = classValue;
 			}
 		}
-
 		return vote;
 	}
 
@@ -257,18 +253,22 @@ public class Knn extends Classifier {
 				maxDistance = currentDistance;
 			}
 		}
-
 		return maxDistance;
 	}
 
 	/**
-	 * Calculates the average error on given dataset.
+	 * Calculates the average error on given dataset: # mistakes / # instances.
 	 * @param dataset of instances.
 	 * @return the error on the dataset.
      */
-	public Double calcAverageError(Instances dataset) {
+	public double calcAverageError(Instances dataset) {
 
-		return -1.0;
+		int mistakes = 0;
+
+		for (int i = 0; i < dataset.numInstances(); i++) {
+			mistakes = (classify(dataset.instance(i)) != dataset.instance(i).classValue()) ? mistakes + 1 : mistakes;
+		}
+		return (mistakes / dataset.numInstances());
 	}
 
 	/**
@@ -276,10 +276,41 @@ public class Knn extends Classifier {
 	 * @param dataset of instances.
 	 * @return the cross validation error on the dataset.
      */
-	public Double crossValidationError(Instance dataset) {
+	public double crossValidationError(Instances dataset) {
 
-		return -1.0;
+		double error = 0;
+		Instances[] splitData;
+
+		for (int i = 0; i < 10; i++) {
+			splitData = splitDataBy(dataset, i);
+			m_trainingInstances = splitData[0];
+			error += calcAverageError(splitData[1]);
+		}
+
+		return error / 10;
 	}
 
+	/**
+	 * Splits the dataset into 10 subsets by index i.
+	 * @param dataset to split.
+	 * @param index of fold to set as validation.
+	 * @return an array where arr[0] = 9 learning folds and arr[1] = 1 validation fold.
+     */
+	private Instances[] splitDataBy(Instances dataset, int index) {
+
+		Instances[] splitData = new Instances[2];
+
+		int foldSize = (int)(dataset.numInstances() / 10);
+		int splitIndex = foldSize * index;
+
+		for (int i = 0; i < dataset.numInstances(); i++) {
+			if (i >= splitIndex && i <=  splitIndex + foldSize) {
+				splitData[1].add(dataset.instance(i));
+			} else {
+				splitData[0].add(dataset.instance(i));
+			}
+		}
+		return splitData;
+	}
 
 }
