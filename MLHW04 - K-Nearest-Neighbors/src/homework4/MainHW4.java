@@ -50,11 +50,11 @@ public class MainHW4 {
 		// 2.1. Glass data
 		double[] bestParams = homework.findBestParameters(glassData);
 
-		System.out.println("Best parameters for glass.txt are: ");
-		System.out.println("1. k = " + bestParams[0]);
-		System.out.println("2. p = " + bestParams[1]);
-		System.out.println("3. votingMethod = " + bestParams[2]);
-		System.out.println("With lowest Cross Validation Error of " + bestParams[3]);
+//		System.out.println("Best parameters for glass.txt are: ");
+//		System.out.println("1. k = " + bestParams[0]);
+//		System.out.println("2. p = " + bestParams[1]);
+//		System.out.println("3. votingMethod = " + bestParams[2]);
+//		System.out.println("With lowest Cross Validation Error of " + bestParams[3]);
 
 		// 2.2. Cancer data
 		bestParams = homework.findBestParameters(cancerData);
@@ -88,7 +88,7 @@ public class MainHW4 {
 				for (double votingMethod = 0; votingMethod <= 1; votingMethod++) {
 
 					// Goes through p = 1, 2, 3 and infinity
-					p = (p == 4) ? Double.POSITIVE_INFINITY : p;
+					p = (p == 4) ? Double.MAX_VALUE : p;
 
 					// Calculates best k and p using votingMethod
 					knn.setParameters(k, p, votingMethod);
