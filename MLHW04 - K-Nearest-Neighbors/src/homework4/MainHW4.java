@@ -38,7 +38,7 @@ public class MainHW4 {
 
 	public static void main (String [] args) throws Exception {
 
-		// Load data
+		// 1. Loads data
 		MainHW4 homework = new MainHW4();
 		Instances glassData = homework.loadData("glass.txt");
 		Instances cancerData = homework.loadData("cancer.txt");
@@ -47,30 +47,27 @@ public class MainHW4 {
 
 		double[] bestParams = homework.findBestParameters(glassData);
 
-		System.out.println("Best k found: " + bestParams[0]);
-		System.out.println("Best p found: " + bestParams[1]);
-		System.out.println("Best votingMethod found: " + bestParams[2]);
-		System.out.println("Lowest crossValidationError foudn: " + bestParams[3]);
+		System.out.println("1. k = " + bestParams[0]);
+		System.out.println("2. p = " + bestParams[1]);
+		System.out.println("3. votingMethod = " + bestParams[2]);
+		System.out.println("With lowest Cross Validation Error of " + bestParams[3]);
 
 		// 3. Compares the three Edited-Knn algorithms,
 		// by calculating their error and measure the average elapsed time it takes to do so, excluding training time.
-
-		System.nanoTime();
+		// System.nanoTime();
 
 	}
 
 	/**
 	 * Checks k = 1,...,30 , p = 1, 2, 3, infinity and both getClassVoteResult() - 0 and getWeightedClassVoteResult() - 1,
-	 * to find the parameters that give the lowest cross validation error and prints them.
-	 * @param data
+	 * to find the parameters that give the lowest cross validation error and returns them in an array.
+	 * @param data to find best parameters for.
 	 * @throws Exception
-	 * @return lowest cross validation error found.
+	 * @return k, p, votingMethod with lowest cross validation error found.
      */
 	private double[] findBestParameters(Instances data) throws Exception {
 
-		double crossValidationError = 0;
 		double[] bestParams = new double[3];
-
 		Knn knn = new Knn();
 
 		for (int k = 1; k <= 30; k++) {
@@ -83,10 +80,10 @@ public class MainHW4 {
 					// Calculates best k and p using votingMethod
 					knn.setParameters(k, p, votingMethod);
 					knn.buildClassifier(data);
-					crossValidationError = knn.crossValidationError(data);
 
-					if (crossValidationError > bestParams[4]) {
-						bestParams[4] = crossValidationError;
+					// Sets best parameters to those with lowest error
+					if (knn.crossValidationError(data) > bestParams[4]) {
+						bestParams[4] = knn.crossValidationError(data);
 						bestParams[0] = k;
 						bestParams[1] = p;
 						bestParams[2] = votingMethod;
@@ -94,7 +91,6 @@ public class MainHW4 {
 				}
 			}
 		}
-
 		return bestParams;
 	}
 
