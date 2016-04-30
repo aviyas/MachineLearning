@@ -82,7 +82,7 @@ public class Knn extends Classifier {
      */
 	public double classify(Instance newInstance) {
 
-		HashMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
+		HashMap<Instance, Double> nearestNeighbors = findNearestNeighbors(newInstance);
 
 		if (votingMethod == 1) {
 			return getWeightedClassVoteResult(nearestNeighbors);
@@ -96,35 +96,56 @@ public class Knn extends Classifier {
 	 * @param newInstance to be examined.
 	 * @return k nearest neighbors and their distances.
      */
-	public HashMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
+	public  HashMap<Instance, Double> findNearestNeighbors(Instance newInstance) {
 
-		TreeMap<Double, Instance> allData = new TreeMap<>();
+		HashMap<Instance, Double> allData = new HashMap<>();
 
 		// 1. Calculates the distance from all instances and put in a TreeMap
 		Instance currentInstance;
 		for (int i = 0; i < m_trainingInstances.numInstances(); i++) {
 			currentInstance = m_trainingInstances.instance(i);
-			allData.put(distance(currentInstance, newInstance), currentInstance);
+			allData.put(currentInstance, distance(currentInstance, newInstance));
 		}
+
+		allData = sortByValue(allData);
 
 		if (allData.size() < k) {
 			System.out.println("problem with finding nearestNeighbors, params: k = " + k + " , p = " + p);
 		}
 
 		// 2. Finds k mappings with k lowest key values
-		HashMap<Double, Instance> nearestNeighbors = new HashMap<>();
+		HashMap<Instance, Double> nearestNeighbors = new HashMap<>();
 		Double currentMinValue = 0.0;
 		Instance currentMinInstance;
 
 		for (int j = 0; j < k; j++) {
 
-			currentMinValue = allData.firstEntry().getKey();
-			currentMinInstance = allData.firstEntry().getValue();
-			nearestNeighbors.put(currentMinValue, currentMinInstance);
+			currentMinValue = allData.firstEntry().getValue();
+			currentMinInstance = allData.firstEntry().getKey();
+			nearestNeighbors.put(currentMinInstance, currentMinValue);
 			allData.remove(currentMinValue, currentMinInstance);
 		}
 
 		return nearestNeighbors;
+	}
+
+	private HashMap<Instance,Double> sortByValue(HashMap<Instance, Double> data) {
+
+		static <K,V extends Comparable<? super V>> SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
+			SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
+					new Comparator<Map.Entry<K,V>>() {
+						@Override public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+							int res = e1.getValue().compareTo(e2.getValue());
+							return res != 0 ? res : 1; // Special fix to preserve items with equal values
+						}
+					}
+			);
+			sortedEntries.addAll(map.entrySet());
+			return sortedEntries;
+		}
+
+
+		return null;
 	}
 
 	/**
@@ -132,15 +153,15 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
-	public double getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
+	public double getClassVoteResult(HashMap<Instance, Double> nearestNeighbors) {
 
 		// 1. Creates mappings of possible class values and their count
-		HashMap<Double, Integer> counter = new HashMap<Double, Integer>();
+		HashMap<Double, Integer> counter = new HashMap<>();
 
 		Double currentClassValue;
 		Integer currentCount;
 
-		for (Instance neighbor : nearestNeighbors.values()) {
+		for (Instance neighbor : nearestNeighbors.keySet()) {
 			currentClassValue = neighbor.classValue();
 			currentCount = counter.getOrDefault(currentClassValue, 0);
 			counter.put(currentClassValue, currentCount + 1);
@@ -166,24 +187,24 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
-	public double getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
+	public double getWeightedClassVoteResult(HashMap<Instance, Double> nearestNeighbors) {
 
 
 		// 1. Creates mappings of possible class values and their rating
 		HashMap<Double, Double> rater = new HashMap<Double, Double>();
 
-		Instance currentNeighbor;
+		Double currentDistance;
 		Double currentClassValue;
 		Double currentRate;
 		Double addedRate;
 
-		for (Double distance : nearestNeighbors.keySet()) {
-			currentNeighbor = nearestNeighbors.get(distance);
-			currentClassValue = currentNeighbor.classValue();
+		for (Instance neighbor : nearestNeighbors.keySet()) {
+			currentDistance = nearestNeighbors.get(neighbor);
+			currentClassValue = neighbor.classValue();
 			currentRate = rater.getOrDefault(currentClassValue, 0.0);
 
 			// Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
-			addedRate = 1 / Math.pow(distance, 2);
+			addedRate = 1 / Math.pow(currentDistance, 2);
 			rater.put(currentClassValue, currentRate + addedRate);
 		}
 
@@ -235,7 +256,7 @@ public class Knn extends Classifier {
      * @return the nth root of value.
      */
 	private double root(double number, double n) {
-		return Math.pow(Math.E, Math.log(number) / n);
+		return Math.pow(number, 1 / n);
 	}
 
 	/**
