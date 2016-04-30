@@ -208,55 +208,7 @@ public class Knn extends Classifier {
      * @return the distance between the instances.
      */
 	public double distance(Instance thingOne, Instance thingTwo) {
-
-		double distance = 0;
-
-		// Calculates distance according with p value and attribute type
-		if (thingOne.attribute(0).isNumeric()) {
-			distance = (Double.isFinite(p)) ? lPDistance(thingOne, thingTwo) : lInfinityDistance(thingOne, thingTwo);
-		} else {
-			distance = valueDifferenceMeasureDistance(thingOne, thingTwo);
-		}
-
-		return distance;
-	}
-
-	/**
-	 * Calculates the distance between two instances with non-numeric attributes.
-	 * @param thingOne first instance
-	 * @param thingTwo second instance
-     * @return the difference measure distance between the instances.
-     */
-	private double valueDifferenceMeasureDistance(Instance thingOne, Instance thingTwo) {
-
-		double distance = 0;
-		Attribute classAttribute = thingOne.classAttribute();
-
-		for (int i = 0; i < classAttribute.numValues(); i++) {
-			distance += (aposterioriProbability(classAttribute.value(i), thingOne) -
-							aposterioriProbability(classAttribute.value(i), thingTwo));
-		}
-		return distance;
-	}
-
-	/**
-	 * Calculates the a posteriori probability of a given class value if instance is thingOne, using the bayes formula.
-	 * @param classValue the given value.
-	 * @param thingOne the given instance.
-     * @return probability (A = classValue | x = thingOne).
-     */
-	private double aposterioriProbability(String classValue, Instance thingOne) {
-		double classPriorProbability = 0;
-		double instancePriorProbability = 0;
-		double likelihood = 0;
-
-		// Estimates P(Ai) based on the training set
-
-		// Estimates P(xj) based on the training set
-
-		// Estimates P(xj | Ai) = p(xj and Ai) / P(Ai) based on the training set
-
-		return ((likelihood * classPriorProbability) / instancePriorProbability);
+		return (Double.isFinite(p)) ? lPDistance(thingOne, thingTwo) : lInfinityDistance(thingOne, thingTwo);
 	}
 
 	/**
