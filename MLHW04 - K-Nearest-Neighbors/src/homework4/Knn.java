@@ -221,6 +221,7 @@ public class Knn extends Classifier {
 
 		double distance = 0;
 
+		// Sums all differences at the power of p
 		for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
 			distance += Math.pow(thingOne.value(i) - thingTwo.value(i), p);
 		}
@@ -246,7 +247,18 @@ public class Knn extends Classifier {
      */
 	public double lInfinityDistance(Instance thingOne, Instance thingTwo) {
 
-		return -1.0;
+		double maxDistance = Integer.MIN_VALUE;
+		double currentDistance;
+
+		// Takes the maximum difference measured between all attributes
+		for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
+			currentDistance = Math.abs(thingOne.value(i) - thingTwo.value(i));
+			if (currentDistance > maxDistance) {
+				maxDistance = currentDistance;
+			}
+		}
+
+		return maxDistance;
 	}
 
 	/**
