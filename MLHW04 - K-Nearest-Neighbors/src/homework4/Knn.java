@@ -3,6 +3,7 @@ package homework4;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
 import weka.core.Instance;
+import weka.core.SystemInfo;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -81,7 +82,7 @@ public class Knn extends Classifier {
      */
 	public double classify(Instance newInstance) {
 
-		TreeMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
+		HashMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
 
 		if (votingMethod == 1) {
 			return getWeightedClassVoteResult(nearestNeighbors);
@@ -95,7 +96,7 @@ public class Knn extends Classifier {
 	 * @param newInstance to be examined.
 	 * @return k nearest neighbors and their distances.
      */
-	public TreeMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
+	public HashMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
 
 		TreeMap<Double, Instance> allData = new TreeMap<>();
 
@@ -106,14 +107,19 @@ public class Knn extends Classifier {
 			allData.put(distance(currentInstance, newInstance), currentInstance);
 		}
 
+		if (allData.size() < k) {
+			System.out.println("problem with finding nearestNeighbors, params: k = " + k + " , p = " + p);
+		}
+
 		// 2. Finds k mappings with k lowest key values
-		TreeMap<Double, Instance> nearestNeighbors = new TreeMap<Double, Instance>();
+		HashMap<Double, Instance> nearestNeighbors = new HashMap<>();
 		Double currentMinValue = 0.0;
 		Instance currentMinInstance;
 
 		for (int j = 0; j < k; j++) {
-			currentMinInstance = allData.firstEntry().getValue();
+
 			currentMinValue = allData.firstEntry().getKey();
+			currentMinInstance = allData.firstEntry().getValue();
 			nearestNeighbors.put(currentMinValue, currentMinInstance);
 			allData.remove(currentMinValue, currentMinInstance);
 		}
@@ -126,7 +132,7 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
-	public double getClassVoteResult(TreeMap<Double, Instance> nearestNeighbors) {
+	public double getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
 		// 1. Creates mappings of possible class values and their count
 		HashMap<Double, Integer> counter = new HashMap<Double, Integer>();
@@ -160,7 +166,7 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
-	public double getWeightedClassVoteResult(TreeMap<Double, Instance> nearestNeighbors) {
+	public double getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
 
 
 		// 1. Creates mappings of possible class values and their rating
@@ -202,7 +208,7 @@ public class Knn extends Classifier {
      * @return the distance between the instances.
      */
 	public double distance(Instance thingOne, Instance thingTwo) {
-		return (Double.isFinite(p)) ? lPDistance(thingOne, thingTwo) : lInfinityDistance(thingOne, thingTwo);
+		return (p == Double.MAX_VALUE) ? lInfinityDistance(thingOne, thingTwo) : lPDistance(thingOne, thingTwo);
 	}
 
 	/**
@@ -217,7 +223,7 @@ public class Knn extends Classifier {
 
 		// Sums all differences at the power of p
 		for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
-			distance += Math.pow(thingOne.value(i) - thingTwo.value(i), p);
+			distance += Math.abs(Math.pow(thingOne.value(i) - thingTwo.value(i), p));
 		}
 		return root(distance, p);
 	}
