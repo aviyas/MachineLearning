@@ -4,8 +4,10 @@ import weka.classifiers.Classifier;
 import weka.core.Instances;
 import weka.core.Instance;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 
 public class Knn extends Classifier {
@@ -79,7 +81,7 @@ public class Knn extends Classifier {
      */
 	public double classify(Instance newInstance) {
 
-		HashMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
+		TreeMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
 
 		if (votingMethod == 1) {
 			return getWeightedClassVoteResult(nearestNeighbors);
@@ -93,11 +95,11 @@ public class Knn extends Classifier {
 	 * @param newInstance to be examined.
 	 * @return k nearest neighbors and their distances.
      */
-	public HashMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
+	public TreeMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
 
-		HashMap<Double, Instance> allData = new HashMap<>();
+		TreeMap<Double, Instance> allData = new TreeMap<>();
 
-		// 1. Calculates the distance from all instances and put in a HashMap
+		// 1. Calculates the distance from all instances and put in a TreeMap
 		Instance currentInstance;
 		for (int i = 0; i < m_trainingInstances.numInstances(); i++) {
 			currentInstance = m_trainingInstances.instance(i);
@@ -105,16 +107,17 @@ public class Knn extends Classifier {
 		}
 
 		// 2. Finds k mappings with k lowest key values
-		HashMap<Double, Instance> nearestNeighbors = new HashMap<Double, Instance>();
+		TreeMap<Double, Instance> nearestNeighbors = new TreeMap<Double, Instance>();
 		Double currentMinValue = 0.0;
 		Instance currentMinInstance;
 
 		for (int j = 0; j < k; j++) {
-			currentMinValue = Collections.min(nearestNeighbors.keySet());
-			currentMinInstance = nearestNeighbors.get(currentMinValue);
+			currentMinInstance = allData.firstEntry().getValue();
+			currentMinValue = allData.firstEntry().getKey();
 			nearestNeighbors.put(currentMinValue, currentMinInstance);
 			allData.remove(currentMinValue, currentMinInstance);
 		}
+
 		return nearestNeighbors;
 	}
 
@@ -123,7 +126,7 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
-	public double getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
+	public double getClassVoteResult(TreeMap<Double, Instance> nearestNeighbors) {
 
 		// 1. Creates mappings of possible class values and their count
 		HashMap<Double, Integer> counter = new HashMap<Double, Integer>();
@@ -157,7 +160,7 @@ public class Knn extends Classifier {
 	 * @param nearestNeighbors to base the vote on.
 	 * @return the class value with the most votes.
      */
-	public double getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
+	public double getWeightedClassVoteResult(TreeMap<Double, Instance> nearestNeighbors) {
 
 
 		// 1. Creates mappings of possible class values and their rating
@@ -294,10 +297,14 @@ public class Knn extends Classifier {
 		int foldSize = (int)(dataset.numInstances() / 10);
 		int splitIndex = foldSize * index;
 
-		splitData[1] = new Instances(dataset, splitIndex, foldSize);	// Copies the relevant validation section
-		splitData[0] = new Instances(dataset, 0, splitIndex);			// Copies up to the first validation instance
+		// 1. Copies the relevant validation section
+		splitData[1] = new Instances(dataset, splitIndex, foldSize);
 
-		// Adds the rest training instances
+		// 2. Copies the relevant training sections:
+		// 		2.1. Pre validation set
+		splitData[0] = new Instances(dataset, 0, splitIndex);
+
+		// 		2.2. Post validation set
 		for (int i = splitIndex + foldSize; i < dataset.numInstances(); i++) {
 				splitData[0].add(dataset.instance(i));
 		}
