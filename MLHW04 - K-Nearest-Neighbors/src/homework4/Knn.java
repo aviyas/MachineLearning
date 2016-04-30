@@ -95,7 +95,7 @@ public class Knn extends Classifier {
      */
 	public HashMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
 
-		HashMap<Double, Instance> allData = new HashMap<Double, Instance>();
+		HashMap<Double, Instance> allData = new HashMap<>();
 
 		// 1. Calculates the distance from all instances and put in a HashMap
 		Instance currentInstance;
@@ -294,12 +294,12 @@ public class Knn extends Classifier {
 		int foldSize = (int)(dataset.numInstances() / 10);
 		int splitIndex = foldSize * index;
 
-		for (int i = 0; i < dataset.numInstances(); i++) {
-			if (i >= splitIndex && i <=  splitIndex + foldSize) {
-				splitData[1].add(dataset.instance(i));
-			} else {
+		splitData[1] = new Instances(dataset, splitIndex, foldSize);	// Copies the relevant validation section
+		splitData[0] = new Instances(dataset, 0, splitIndex);			// Copies up to the first validation instance
+
+		// Adds the rest training instances
+		for (int i = splitIndex + foldSize; i < dataset.numInstances(); i++) {
 				splitData[0].add(dataset.instance(i));
-			}
 		}
 		return splitData;
 	}
