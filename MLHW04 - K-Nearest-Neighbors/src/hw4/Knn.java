@@ -59,9 +59,13 @@ public class Knn extends Classifier {
      */
     private void editedForward(Instances instances) {
         m_trainingInstances = new Instances(instances, instances.numInstances());
-        Knn.<Instance>enumerationAsStream(instances.enumerateInstances())
-                .filter(instance -> classify(instance) != instance.classValue())
-                .forEach(m_trainingInstances::add);
+
+        for (int i = 0; i < instances.numInstances(); i++) {
+            Instance instance = instances.instance(i);
+            if (classify(instance) != instance.classValue()) {
+                m_trainingInstances.add(instance);
+            }
+        }
     }
 
     /**
@@ -108,7 +112,7 @@ public class Knn extends Classifier {
         } catch (IllegalStateException e) {
             // The instances list is empty so let choose a random class.
             double c = ThreadLocalRandom.current().nextInt(0, newInstance.numClasses());
-            System.out.printf("Chose random class: %f\n", c);
+            //System.out.printf("Chose random class: %f\n", c);
             return c;
         }
     }
@@ -141,7 +145,7 @@ public class Knn extends Classifier {
      */
     public double getClassVoteResult(Map<Double, Instance> nearestNeighbors) {
         return getClassVoteResult(nearestNeighbors,
-                Collectors.summingDouble(entry -> 1));
+                Collectors.summingDouble(entry -> 1d));
     }
 
     /**
@@ -153,7 +157,7 @@ public class Knn extends Classifier {
      */
     public double getWeightedClassVoteResult(Map<Double, Instance> nearestNeighbors) {
         return getClassVoteResult(nearestNeighbors,
-                Collectors.summingDouble(entry -> 1/Math.pow(entry.getKey(), 2)));
+                Collectors.summingDouble(entry -> 1d/Math.pow(entry.getKey(), 2)));
     }
 
     private double getClassVoteResult(Map<Double, Instance> nearestNeighbors,
@@ -207,7 +211,7 @@ public class Knn extends Classifier {
      * @return the nth root of value.
      */
     private double root(double number, double n) {
-        return Math.pow(number, 1 / n);
+        return Math.pow(number, 1d / n);
     }
 
     /**
@@ -246,21 +250,23 @@ public class Knn extends Classifier {
      * @param dataset of instances.
      * @return the cross validation error on the dataset.
      */
-    public double crossValidationError(Instances dataset) throws Exception {
+    public double[] crossValidationError(Instances dataset) throws Exception {
         double totalError = 0;
         Instances[] splitData;
-
+        long totalTime = 0;
         for (int i = 0; i < FOLD_NUM; i++) {
             splitData = splitDataBy(dataset, i);
             Instances learning = splitData[0];
             Instances validation = splitData[1];
 
             buildClassifier(learning);
+            long startTime = System.nanoTime();
             double error = calcAverageError(validation);
+            totalTime += System.nanoTime() - startTime;
             totalError += error;
         }
 
-        return totalError / FOLD_NUM;
+        return new double[] {totalError / FOLD_NUM, totalTime / FOLD_NUM};
     }
 
     /**

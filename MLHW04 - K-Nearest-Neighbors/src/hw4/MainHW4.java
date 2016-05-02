@@ -48,32 +48,59 @@ public class MainHW4 {
         // 2.1. Glass data
         // We remove the useless ID attribute.
         glassData.deleteAttributeAt(0);
-        double[] bestParams = homework.findBestParameters(glassData);
+
+
+        double[] glassBestParams = homework.findBestParameters(glassData);
 
         System.out.printf("Cross validation error with K = %d" +
                 " p = %d, vote function = %s " +
                 "for glass data is: %f\n",
-                (int)bestParams[0],
-                (int)bestParams[1],
-                bestParams[2] == 0? "weighted" : "uniform",
-                bestParams[3]);
+                (int)glassBestParams[0],
+                (int)glassBestParams[1],
+                glassBestParams[2] == 0? "weighted" : "uniform",
+                glassBestParams[3]);
 
 
 
         // 2.2. Cancer data
-        bestParams = homework.findBestParameters(cancerData);
+        double[] cancerBestParams = homework.findBestParameters(cancerData);
 
         System.out.printf("Cross validation error with K = %d" +
                         " p = %d, vote function = %s " +
                         "for cancer data is: %f\n",
-                (int)bestParams[0],
-                (int)bestParams[1],
-                bestParams[2] == 0? "weighted" : "uniform",
-                bestParams[3]);
+                (int)cancerBestParams[0],
+                (int)cancerBestParams[1],
+                cancerBestParams[2] == 0? "weighted" : "uniform",
+                cancerBestParams[3]);
 
         // 3. Compares the three Edited-Knn algorithms,
         // by calculating their error and measure the average elapsed time it takes to do so, excluding training time.
         // System.nanoTime();
+
+        Knn knn = new Knn();
+        knn.setParameters((long)glassBestParams[0], glassBestParams[1], glassBestParams[2]);
+        knn.setM_MODE("none");
+        double[] result = knn.crossValidationError(glassData);
+        System.out.printf("Cross validation error of non-edited knn on glass dataset is " +
+                "%f and the average elapsed time is %f\n",
+                result[0], result[1]);
+
+        knn = new Knn();
+        knn.setParameters((long)glassBestParams[0], glassBestParams[1], glassBestParams[2]);
+        knn.setM_MODE("forward");
+        result = knn.crossValidationError(glassData);
+        System.out.printf("Cross validation error of forwards-edited knn on glass dataset is " +
+                        "%f and the average elapsed time is %f\n",
+                result[0], result[1]);
+
+        knn = new Knn();
+        knn.setParameters((long)glassBestParams[0], glassBestParams[1], glassBestParams[2]);
+        knn.setM_MODE("backward");
+        result = knn.crossValidationError(glassData);
+        System.out.printf("Cross validation error of backwards-edited knn on glass dataset is " +
+                        "%f and the average elapsed time is %f\n",
+                result[0], result[1]);
+
 
     }
 
@@ -104,7 +131,7 @@ public class MainHW4 {
                     knn.setParameters(k, p, votingMethod);
 
                     // Sets best parameters to those with lowest error
-                    double crossValidationError = knn.crossValidationError(data);
+                    double crossValidationError = knn.crossValidationError(data)[0];
                     if (crossValidationError < bestParams[3]) {
                         bestParams[0] = k;
                         bestParams[1] = p;
