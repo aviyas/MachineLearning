@@ -1,13 +1,11 @@
 package hw4;
 
-import sun.plugin.dom.exception.InvalidStateException;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Predicate;
 import java.util.stream.*;
 
 
