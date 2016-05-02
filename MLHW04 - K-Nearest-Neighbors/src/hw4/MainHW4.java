@@ -1,9 +1,6 @@
 package hw4;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 import weka.core.Instances;
 
@@ -49,22 +46,30 @@ public class MainHW4 {
         // 2. Prints the cross validation error with the best parameters for the both -
 
         // 2.1. Glass data
+        // We remove the useless ID attribute.
+        glassData.deleteAttributeAt(0);
         double[] bestParams = homework.findBestParameters(glassData);
 
-//		System.out.println("Best parameters for glass.txt are: ");
-//		System.out.println("1. k = " + bestParams[0]);
-//		System.out.println("2. p = " + bestParams[1]);
-//		System.out.println("3. votingMethod = " + bestParams[2]);
-//		System.out.println("With lowest Cross Validation Error of " + bestParams[3]);
+        System.out.printf("Cross validation error with K = %d" +
+                " p = %d, vote function = %s " +
+                "for glass data is: %f\n",
+                (int)bestParams[0],
+                (int)bestParams[1],
+                bestParams[2] == 0? "weighted" : "uniform",
+                bestParams[3]);
+
+
 
         // 2.2. Cancer data
         bestParams = homework.findBestParameters(cancerData);
 
-        System.out.println("Best parameters for cancer.txt are: ");
-        System.out.println("1. k = " + bestParams[0]);
-        System.out.println("2. p = " + bestParams[1]);
-        System.out.println("3. votingMethod = " + bestParams[2]);
-        System.out.println("With lowest Cross Validation Error of " + bestParams[3]);
+        System.out.printf("Cross validation error with K = %d" +
+                        " p = %d, vote function = %s " +
+                        "for cancer data is: %f\n",
+                (int)bestParams[0],
+                (int)bestParams[1],
+                bestParams[2] == 0? "weighted" : "uniform",
+                bestParams[3]);
 
         // 3. Compares the three Edited-Knn algorithms,
         // by calculating their error and measure the average elapsed time it takes to do so, excluding training time.
@@ -83,6 +88,7 @@ public class MainHW4 {
     private double[] findBestParameters(Instances data) throws Exception {
 
         double[] bestParams = new double[4];
+        bestParams[3] = Double.MAX_VALUE;
         Knn knn = new Knn();
 
         for (int k = 1; k <= 30; k++) {
@@ -92,16 +98,18 @@ public class MainHW4 {
                     // Goes through p = 1, 2, 3 and infinity
                     p = (p == 4) ? Double.MAX_VALUE : p;
 
+                    //System.out.printf("New iteration: K=%d, P=%f, Voting=%f\n", k, p, votingMethod);
+
                     // Calculates best k and p using votingMethod
                     knn.setParameters(k, p, votingMethod);
-                    knn.buildClassifier(data);
 
                     // Sets best parameters to those with lowest error
-                    if (knn.crossValidationError(data) > bestParams[3]) {
-                        bestParams[3] = knn.crossValidationError(data);
+                    double crossValidationError = knn.crossValidationError(data);
+                    if (crossValidationError < bestParams[3]) {
                         bestParams[0] = k;
                         bestParams[1] = p;
                         bestParams[2] = votingMethod;
+                        bestParams[3] = crossValidationError;
                     }
                 }
             }

@@ -1,11 +1,14 @@
 package hw4;
 
+import sun.plugin.dom.exception.InvalidStateException;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
 
-import java.util.HashMap;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
+import java.util.stream.*;
 
 
 public class Knn extends Classifier {
@@ -13,7 +16,7 @@ public class Knn extends Classifier {
     private String M_MODE = "";
     private Instances m_trainingInstances;
 
-    private double k;
+    private long k;
     private double p;
     private double votingMethod;
 
@@ -25,7 +28,7 @@ public class Knn extends Classifier {
         M_MODE = m_MODE;
     }
 
-    public void setParameters(double k, double p, double votingMethod) {
+    public void setParameters(long k, double p, double votingMethod) {
         this.k = k;
         this.p = p;
         this.votingMethod = votingMethod;
@@ -55,6 +58,10 @@ public class Knn extends Classifier {
      * @param instances of training data.
      */
     private void editedForward(Instances instances) {
+        m_trainingInstances = new Instances(instances, instances.numInstances());
+        Knn.<Instance>enumerationAsStream(instances.enumerateInstances())
+                .filter(instance -> classify(instance) != instance.classValue())
+                .forEach(m_trainingInstances::add);
     }
 
     /**
@@ -63,6 +70,15 @@ public class Knn extends Classifier {
      * @param instances of training data.
      */
     private void editedBackward(Instances instances) {
+        m_trainingInstances =  new Instances(instances);
+
+        for (int i = 0; i < m_trainingInstances.numInstances(); i++) {
+            Instance instance = m_trainingInstances.instance(i);
+            m_trainingInstances.delete(i);
+            if (classify(instance) != instance.classValue()) {
+                m_trainingInstances.add(instance);
+            }
+        }
     }
 
     /**
@@ -81,12 +97,19 @@ public class Knn extends Classifier {
      * @return the classification.
      */
     public double classify(Instance newInstance) {
-        HashMap<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
+        Map<Double, Instance> nearestNeighbors = findNearestNeighbors(newInstance);
 
-        if (votingMethod == 1) {
-            return getWeightedClassVoteResult(nearestNeighbors);
-        } else {
-            return getClassVoteResult(nearestNeighbors);
+        try {
+            if (votingMethod == 1) {
+                return getWeightedClassVoteResult(nearestNeighbors);
+            } else {
+                return getClassVoteResult(nearestNeighbors);
+            }
+        } catch (IllegalStateException e) {
+            // The instances list is empty so let choose a random class.
+            double c = ThreadLocalRandom.current().nextInt(0, newInstance.numClasses());
+            System.out.printf("Chose random class: %f\n", c);
+            return c;
         }
     }
 
@@ -96,35 +119,18 @@ public class Knn extends Classifier {
      * @param newInstance to be examined.
      * @return k nearest neighbors and their distances.
      */
-    public HashMap<Double, Instance> findNearestNeighbors(Instance newInstance) {
-
-        TreeMap<Double, Instance> allData = new TreeMap<>();
-
-        // 1. Calculates the distance from all instances and put in a TreeMap
-        Instance currentInstance;
-        for (int i = 0; i < m_trainingInstances.numInstances(); i++) {
-            currentInstance = m_trainingInstances.instance(i);
-            allData.put(distance(currentInstance, newInstance), currentInstance);
-        }
-
-        if (allData.size() < k) {
-            System.out.println("problem with finding nearestNeighbors, params: k = " + k + " , p = " + p);
-        }
-
-        // 2. Finds k mappings with k lowest key values
-        HashMap<Double, Instance> nearestNeighbors = new HashMap<>();
-        Double currentMinValue = 0.0;
-        Instance currentMinInstance;
-
-        for (int j = 0; j < k; j++) {
-
-            currentMinValue = allData.firstEntry().getKey();
-            currentMinInstance = allData.firstEntry().getValue();
-            nearestNeighbors.put(currentMinValue, currentMinInstance);
-            allData.remove(currentMinValue, currentMinInstance);
-        }
-
-        return nearestNeighbors;
+    public Map<Double, Instance> findNearestNeighbors(Instance newInstance) {
+        // Calculates the distance from all instances and put in a TreeMap
+        // and finds k mappings with k lowest key values
+        //System.out.printf("------- newInstance: %s -----\n", newInstance);
+        Map<Double, Instance> collect = Knn.<Instance>enumerationAsStream(m_trainingInstances.enumerateInstances())
+                .map(instance -> new AbstractMap.SimpleImmutableEntry<>(distance(instance, newInstance), instance))
+                .sorted(Comparator.comparing(Map.Entry::getKey))
+                .limit(k)
+                //.peek(System.out::println)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b) -> a));
+        //System.out.println("------------------");
+        return collect;
     }
 
     /**
@@ -133,32 +139,9 @@ public class Knn extends Classifier {
      * @param nearestNeighbors to base the vote on.
      * @return the class value with the most votes.
      */
-    public double getClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
-
-        // 1. Creates mappings of possible class values and their count
-        HashMap<Double, Integer> counter = new HashMap<Double, Integer>();
-
-        Double currentClassValue;
-        Integer currentCount;
-
-        for (Instance neighbor : nearestNeighbors.values()) {
-            currentClassValue = neighbor.classValue();
-            currentCount = counter.getOrDefault(currentClassValue, 0);
-            counter.put(currentClassValue, currentCount + 1);
-        }
-
-        int maxCount = 0;
-        double vote = -1;
-
-        // 2. Finds maximum among mappings
-        for (Double classValue : counter.keySet()) {
-            currentCount = counter.get(classValue);
-            if (currentCount > maxCount) {
-                maxCount = currentCount;
-                vote = classValue;
-            }
-        }
-        return vote;
+    public double getClassVoteResult(Map<Double, Instance> nearestNeighbors) {
+        return getClassVoteResult(nearestNeighbors,
+                Collectors.summingDouble(entry -> 1));
     }
 
     /**
@@ -168,39 +151,21 @@ public class Knn extends Classifier {
      * @param nearestNeighbors to base the vote on.
      * @return the class value with the most votes.
      */
-    public double getWeightedClassVoteResult(HashMap<Double, Instance> nearestNeighbors) {
+    public double getWeightedClassVoteResult(Map<Double, Instance> nearestNeighbors) {
+        return getClassVoteResult(nearestNeighbors,
+                Collectors.summingDouble(entry -> 1/Math.pow(entry.getKey(), 2)));
+    }
 
-
-        // 1. Creates mappings of possible class values and their rating
-        HashMap<Double, Double> rater = new HashMap<Double, Double>();
-
-        Instance currentNeighbor;
-        Double currentClassValue;
-        Double currentRate;
-        Double addedRate;
-
-        for (Double distance : nearestNeighbors.keySet()) {
-            currentNeighbor = nearestNeighbors.get(distance);
-            currentClassValue = currentNeighbor.classValue();
-            currentRate = rater.getOrDefault(currentClassValue, 0.0);
-
-            // Instead of giving one vote to every class, gives a vote of 1 / (distance)^2.
-            addedRate = 1 / Math.pow(distance, 2);
-            rater.put(currentClassValue, currentRate + addedRate);
-        }
-
-        double maxRate = 0;
-        double vote = -1;
-
-        // 2. Finds maximum among mappings
-        for (Double classValue : rater.keySet()) {
-            currentRate = rater.get(classValue);
-            if (currentRate > maxRate) {
-                maxRate = currentRate;
-                vote = classValue;
-            }
-        }
-        return vote;
+    private double getClassVoteResult(Map<Double, Instance> nearestNeighbors,
+                                      Collector<Map.Entry<Double, Instance>, ?, Double> summaryMethod) {
+        return nearestNeighbors.entrySet().stream()
+                .collect(Collectors.groupingBy(
+                        entry -> entry.getValue().classValue(),
+                        summaryMethod))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElseThrow(IllegalStateException::new)
+                .getKey();
     }
 
     /**
@@ -211,7 +176,8 @@ public class Knn extends Classifier {
      * @return the distance between the instances.
      */
     public double distance(Instance thingOne, Instance thingTwo) {
-        return (p == Double.MAX_VALUE) ? lInfinityDistance(thingOne, thingTwo) : lPDistance(thingOne, thingTwo);
+        return (p == Double.MAX_VALUE) ?
+                lInfinityDistance(thingOne, thingTwo) : lPDistance(thingOne, thingTwo);
     }
 
     /**
@@ -229,6 +195,7 @@ public class Knn extends Classifier {
         for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
             distance += Math.abs(Math.pow(thingOne.value(i) - thingTwo.value(i), p));
         }
+
         return root(distance, p);
     }
 
@@ -251,33 +218,27 @@ public class Knn extends Classifier {
      * @return the l-infinity distance between the instances.
      */
     public double lInfinityDistance(Instance thingOne, Instance thingTwo) {
-
-        double maxDistance = Integer.MIN_VALUE;
-        double currentDistance;
-
         // Takes the maximum difference measured between all attributes
-        for (int i = 0; i < thingOne.numAttributes() - 1; i++) {
-            currentDistance = Math.abs(thingOne.value(i) - thingTwo.value(i));
-            maxDistance = (currentDistance > maxDistance) ? currentDistance : maxDistance;
-        }
-        return maxDistance;
+        return IntStream.range(0, thingOne.numAttributes() - 1)
+                .mapToDouble(i -> Math.abs(thingOne.value(i) - thingTwo.value(i)))
+                .max()
+                .orElseThrow(IllegalStateException::new);
     }
 
     /**
-     * Calculates the average error on given dataset: # mistakes / # instances.
+     * Calculates the average error on given instances: # mistakes / # instances.
      *
-     * @param dataset of instances.
-     * @return the error on the dataset.
+     * @return the error on the instances.
      */
-    public double calcAverageError(Instances dataset) {
+    public double calcAverageError(Instances instances) {
+        double mistakes = Knn.<Instance>enumerationAsStream(instances.enumerateInstances())
+                .filter(instance -> classify(instance) != instance.classValue())
+                .count();
 
-        int mistakes = 0;
-
-        for (int i = 0; i < dataset.numInstances(); i++) {
-            mistakes = (classify(dataset.instance(i)) != dataset.instance(i).classValue()) ? mistakes + 1 : mistakes;
-        }
-        return (mistakes / dataset.numInstances());
+        return mistakes / instances.numInstances();
     }
+
+    private int FOLD_NUM = 10;
 
     /**
      * Calculates the Cross Validation Error, using 10 folds.
@@ -286,16 +247,20 @@ public class Knn extends Classifier {
      * @return the cross validation error on the dataset.
      */
     public double crossValidationError(Instances dataset) throws Exception {
-
-        double error = 0;
+        double totalError = 0;
         Instances[] splitData;
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < FOLD_NUM; i++) {
             splitData = splitDataBy(dataset, i);
-            buildClassifier(splitData[0]);
-            error += calcAverageError(splitData[1]);
+            Instances learning = splitData[0];
+            Instances validation = splitData[1];
+
+            buildClassifier(learning);
+            double error = calcAverageError(validation);
+            totalError += error;
         }
-        return error / 10;
+
+        return totalError / FOLD_NUM;
     }
 
     /**
@@ -309,7 +274,7 @@ public class Knn extends Classifier {
 
         Instances[] splitData = new Instances[2];
 
-        int foldSize = (int) (dataset.numInstances() / 10);
+        int foldSize = dataset.numInstances() / FOLD_NUM;
         int splitIndex = foldSize * index;
 
         // 1. Copies the relevant validation section
@@ -324,6 +289,27 @@ public class Knn extends Classifier {
             splitData[0].add(dataset.instance(i));
         }
         return splitData;
+    }
+
+    /**
+     * Helper method for making an Enumeration being able to being used by Java 8 streams.
+     * @param e
+     * @param <T>
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> Stream<T> enumerationAsStream(Enumeration e) {
+        return StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(
+                        new Iterator<T>() {
+                            public T next() {
+                                return (T)e.nextElement();
+                            }
+                            public boolean hasNext() {
+                                return e.hasMoreElements();
+                            }
+                        },
+                        Spliterator.ORDERED), false);
     }
 
 }
