@@ -16,15 +16,16 @@ import javax.imageio.ImageIO;
 
 import weka.classifiers.functions.LinearRegression;
 import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.DenseInstance;
 import weka.filters.Filter;
 //import weka.filters.unsupervised.attribute.PrincipalComponents;
 import weka.filters.unsupervised.attribute.Remove;
 
 public class Hw7Main {
+
 	public static BufferedReader readDataFile(String filename) {
 		BufferedReader inputReader = null;
 
@@ -79,7 +80,6 @@ public class Hw7Main {
 
 	}
 
-
 	public static BufferedImage convertInstancesToImg(Instances instancesImage, int width, int height) {
 		final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		int index = 0;
@@ -99,18 +99,25 @@ public class Hw7Main {
 
 		// 1. Create instances object from image
 		BufferedImage baboon = ImageIO.read(new File("baboon_face.jpg"));
+		int origHeight = baboon.getHeight();
+		int origWidth = baboon.getWidth();
 		Instances pixels = convertImgToInstances(baboon);
 
-		// 2. Quantize instance object using Kmeans, for k = 2,3,5,10,25,50,100,256
+		// 2. Quantize instance object using K-Means, for k = 2,3,5,10,25,50,100,256
 		int[] kValues = {2, 3, 5, 10, 25, 50, 100, 256};
-		for (int value : kValues) {
-			// TODO: operate kmeans algorithm
-		}
 
-		// 3. Convert back to an image and save the result
-		BufferedImage resultImage = convertInstancesToImg(pixels);
-		File result = new File("result.jpg");
-		ImageIO.write(resultImage, "jpg", result);
+		for (int value : kValues) {
+			KMeans model = new KMeans();
+			model.setK(value);
+			model.buildClusterModel(pixels);
+
+			pixels = model.quantize(pixels);
+
+			// 3. Convert back to an image and save the result
+			BufferedImage resultImage = convertInstancesToImg(pixels, origWidth, origHeight);
+			File result = new File("result.jpg");
+			ImageIO.write(resultImage, "jpg", result);
+		}
 
 		// 4. Runs PCA looping over number i of principal components
 		//    and prints the average euclidean distance (between transformed and original instances)
@@ -123,8 +130,9 @@ public class Hw7Main {
 	 * @param original - original dataset.
 	 * @param transformed - transformed dataset.
      */
-	public static calcAvgDistance(Instances original, Instances transformed) {
+	public double calcAvgDistance(Instances original, Instances transformed) {
 
+		return -1.0;
 	}
 
 }

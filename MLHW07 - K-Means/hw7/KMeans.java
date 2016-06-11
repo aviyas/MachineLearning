@@ -1,9 +1,17 @@
 package hw7;
 
+import weka.core.Instances;
+import weka.core.Instance;
+
+
 public class KMeans {
 
     int k;
     double[] centroids;
+
+    public void setK(int k) {
+        this.k = k;
+    }
 
     /**
      * Initializes any parameters (therefore should call initializecentroids)
@@ -14,6 +22,9 @@ public class KMeans {
      * @param datset - to run the algorithm on.
      */
     public void buildClusterModel(Instances datset) {
+
+        initializeCentroids(datset);
+        findKMeansCentroids(datset);
 
     }
 
