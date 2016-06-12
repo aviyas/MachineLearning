@@ -12,7 +12,6 @@ public class KMeans {
     private int k;
     private double[][] centroids;
     private static int NUM_ITERATIONS;
-    private static double THRESHOLD;
 
     public void setK(int k) {
         this.k = k;
@@ -25,6 +24,7 @@ public class KMeans {
      * @param datset - to run the algorithm on.
      */
     public void buildClusterModel(Instances datset) {
+        NUM_ITERATIONS = 40;
         centroids = new double[k][4];
         initializeCentroids(datset);
         findKMeansCentroids(datset);
@@ -79,7 +79,7 @@ public class KMeans {
      */
     public void findKMeansCentroids(Instances dataset) {
 
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < NUM_ITERATIONS; i++) {
 
             // 1. Assigns all instances to their nearest centroid
             ArrayList<Instance>[] currentClusters = assignClusters(dataset);
