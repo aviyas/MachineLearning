@@ -104,6 +104,8 @@ public class Hw7Main {
 		Instances pixels = convertImgToInstances(baboon);
 		Instances quantizedPixels;
 
+		Hw7Main baboonClustering = new Hw7Main();
+
 		// 2. Quantize instance object using K-Means, for k = 2,3,5,10,25,50,100,256
 		// int[] kValues = {2, 3, 5, 10, 25, 50, 100, 256};
 		int[] kValues = {2};
@@ -114,6 +116,8 @@ public class Hw7Main {
 			model.buildClusterModel(pixels);
 
 			quantizedPixels = model.quantize(pixels);
+			System.out.println("Error for k = " + value + "is: "
+					+ baboonClustering.calcAvgDistance(pixels, quantizedPixels));
 
 			// 3. Convert back to an image and save the result
 			BufferedImage resultImage = convertInstancesToImg(pixels, origWidth, origHeight);
