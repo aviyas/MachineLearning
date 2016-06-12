@@ -108,7 +108,7 @@ public class Hw7Main {
 
 		// 2. Quantize instance object using K-Means, for k = 2,3,5,10,25,50,100,256
 		// int[] kValues = {2, 3, 5, 10, 25, 50, 100, 256};
-		int[] kValues = {2};
+		int[] kValues = {100};
 
 		for (int value : kValues) {
 			KMeans model = new KMeans();

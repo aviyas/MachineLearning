@@ -100,6 +100,10 @@ public class KMeans {
         // For each centroid,
         for (int centroidIndex = 0; centroidIndex < k; centroidIndex++) {
 
+            if (clusters[centroidIndex].isEmpty()) {
+                continue;
+            }
+
             double[] newCentroid = new double[4];
 
             // Iterates through the instances of its cluster and sums their RGBA values
