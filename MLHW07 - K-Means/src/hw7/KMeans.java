@@ -5,15 +5,14 @@ import weka.core.Debug;
 import weka.core.Instances;
 import weka.core.Instance;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Random;
+import java.util.*;
 
 public class KMeans {
 
     private int k;
     private double[][] centroids;
+    private static int NUM_ITERATIONS;
+    private static double THRESHOLD;
 
     public void setK(int k) {
         this.k = k;
@@ -26,6 +25,7 @@ public class KMeans {
      * @param datset - to run the algorithm on.
      */
     public void buildClusterModel(Instances datset) {
+        centroids = new double[k][4];
         initializeCentroids(datset);
         findKMeansCentroids(datset);
     }
@@ -36,27 +36,37 @@ public class KMeans {
      * @param dataset - the training set.
      */
     public void initializeCentroids(Instances dataset) {
-        centroids = new double[k][4];
 
-        Random random = new Random();
-        int range = dataset.numAttributes() + 1;
-        Instance randomInstance;
+        HashSet<Integer> randomIndices = randomizeKIntegers(dataset.numInstances() + 1);
 
-        // Randomizes k instances
-        for (int i = 0; i < k; i++) {
-            randomInstance = dataset.instance(random.nextInt(range));
+        int centroidIndex = 0;
 
-            // Copies their RGBA values
+        // Copies the instances at the random indices RGBA values
+        for (int instanceIndex : randomIndices) {
             for (int j = 0; j < 4; j++) {
-                centroids[i][j] = randomInstance.value(j);
+                centroids[centroidIndex][j] = dataset.instance(instanceIndex).value(j);
             }
+            centroidIndex++;
+        }
+    }
+
+    /**
+     * Randomizes k integers in a given range.
+     * @param range - the given range.
+     * @return the randmoize integers.
+     */
+    private HashSet<Integer> randomizeKIntegers(int range) {
+
+        // Randomizes k distinct indices
+        Random random = new Random();
+        HashSet<Integer> randomIndices = new HashSet<>();
+
+        while (randomIndices.size() < k) {
+            int randomInteger = random.nextInt(range);
+            randomIndices.add(randomInteger);
         }
 
-        // Prints centroids for debugging purposes
-        System.out.println("Initalized: ");
-        for (int i = 0; i < k; i++) {
-            System.out.print(Arrays.toString(centroids[i]) + " , ");
-        }
+        return randomIndices;
     }
 
     /**
@@ -70,20 +80,32 @@ public class KMeans {
     public void findKMeansCentroids(Instances dataset) {
 
         for (int i = 0; i < 40; i++) {
-            findKMeansCentroidsIteration(dataset);
+
+            // 1. Assigns all instances to their nearest centroid
+            ArrayList<Instance>[] currentClusters = assignClusters(dataset);
+
+            // 2. Recomputes centroids using their assigned cluster
+            recomputeCentroids(currentClusters);
+
         }
 
     }
 
-    public void findKMeansCentroidsIteration(Instances dataset) {
+    /**
+     * Helper method - assigns instances to their closest centroid.
+     * @param dataset
+     * @return
+     */
+    private ArrayList<Instance>[] assignClusters(Instances dataset) {
 
-        ArrayList<Instance>[] clusters = (ArrayList<Instance>[])new ArrayList[k];
+        ArrayList<Instance>[] currentClusters = (ArrayList<Instance>[])new ArrayList[k];
 
+        // 1. Initialize the current clusters
         for (int i = 0; i < k; i++) {
-            clusters[i] = new ArrayList<>();
+            currentClusters[i] = new ArrayList<>();
         }
 
-        // 1. Assigns all instances to their nearest centroid:
+        // 2. Assigns all instances to their nearest centroid
         int closestCentroid;
         Instance curInstance;
 
@@ -92,22 +114,28 @@ public class KMeans {
             closestCentroid = findClosestCentroid(curInstance);
 
             // Adds the instance to the cluster of its closest centroids'
-            clusters[closestCentroid].add(curInstance);
+            currentClusters[closestCentroid].add(curInstance);
         }
+        return currentClusters;
+    }
 
-        // 2. Recomputes centroids using their assigned cluster:
+    /**
+     * Recomputes centroids using their assigned cluster.
+     * @param currentClusters - the assigned clusters.
+     */
+    private void recomputeCentroids(ArrayList<Instance>[] currentClusters) {
 
         // For each centroid,
         for (int centroidIndex = 0; centroidIndex < k; centroidIndex++) {
 
-            if (clusters[centroidIndex].isEmpty()) {
+            if (currentClusters[centroidIndex].isEmpty()) {
                 continue;
             }
 
             double[] newCentroid = new double[4];
 
             // Iterates through the instances of its cluster and sums their RGBA values
-            ArrayList<Instance> cluster = clusters[centroidIndex];
+            ArrayList<Instance> cluster = currentClusters[centroidIndex];
 
             for (Instance instance : cluster) {
                 for (int i = 0; i < 4; i++) {
@@ -123,14 +151,7 @@ public class KMeans {
             // Sets the new centroid that was found
             centroids[centroidIndex] = newCentroid;
         }
-
-        // Prints centroids for debugging purposes
-        for (int j = 0; j < k; j++) {
-            System.out.print(Arrays.toString(centroids[j]) + " , ");
-            System.out.println(clusters[j].size());
-        }
     }
-
 
     /**
      * Calculates the squared distance between the input instance and the input centroid.

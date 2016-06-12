@@ -25,6 +25,10 @@ import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
 
 public class Hw7Main {
+
+	private static final String[] images = {"baboon_face.jpg", "sunset.jpg"};
+	private static final int[] kValues = {2, 3, 5, 10, 25, 50, 100, 256};
+
 	public static BufferedReader readDataFile(String filename) {
 		BufferedReader inputReader = null;
 
@@ -99,28 +103,30 @@ public class Hw7Main {
 
 		System.out.println("Started running");
 
-		// 1. Create instances object from image
-		BufferedImage image = ImageIO.read(new File("baboon_face.jpg"));
-		int origHeight = image.getHeight();
-		int origWidth = image.getWidth();
-		Instances pixels = convertImgToInstances(image);
-		Instances quantizedPixels;
+		for (String imageName : images) {
 
-		// 2. Quantize instance object using K-Means, for k = 2,3,5,10,25,50,100,256
-		// int[] kValues = {2, 3, 5, 10, 25, 50, 100, 256};
-		int[] kValues = {100};
+			// 1. Create instances object from image
+			BufferedImage image = ImageIO.read(new File(imageName));
+			Instances pixels = convertImgToInstances(image);
+			Instances quantizedPixels;
 
-		for (int value : kValues) {
-			KMeans model = new KMeans();
-			model.setK(value);
-			model.buildClusterModel(pixels);
+			// 2. Quantize instance object using K-Means, for all kValues
+			for (int value : kValues) {
 
-			quantizedPixels = model.quantize(pixels);
+				// 2.1. Train model
+				KMeans model = new KMeans();
+				model.setK(value);
+				model.buildClusterModel(pixels);
 
-			// 3. Convert back to an image and save the result
-			BufferedImage resultImage = convertInstancesToImg(quantizedPixels, image.getWidth(), image.getHeight());
-			File result = new File("resultFor" + value + ".jpg");
-			ImageIO.write(resultImage, "jpg", result);
+				// 2.2. Get clusters
+				quantizedPixels = model.quantize(pixels);
+
+				// 3. Convert back to an image and save the result
+				BufferedImage resultImage = convertInstancesToImg(quantizedPixels, image.getWidth(), image.getHeight());
+				File result = new File("resultFor" + imageName.substring(0, imageName.length() - 4)
+						+ "With" + value + "Clusters.jpg");
+				ImageIO.write(resultImage, "jpg", result);
+			}
 		}
 
 		// 4. Runs PCA looping over number i of principal components
