@@ -102,16 +102,18 @@ public class Hw7Main {
 		int origHeight = baboon.getHeight();
 		int origWidth = baboon.getWidth();
 		Instances pixels = convertImgToInstances(baboon);
+		Instances quantizedPixels;
 
 		// 2. Quantize instance object using K-Means, for k = 2,3,5,10,25,50,100,256
-		int[] kValues = {2, 3, 5, 10, 25, 50, 100, 256};
+		// int[] kValues = {2, 3, 5, 10, 25, 50, 100, 256};
+		int[] kValues = {2};
 
 		for (int value : kValues) {
 			KMeans model = new KMeans();
 			model.setK(value);
 			model.buildClusterModel(pixels);
 
-			pixels = model.quantize(pixels);
+			quantizedPixels = model.quantize(pixels);
 
 			// 3. Convert back to an image and save the result
 			BufferedImage resultImage = convertInstancesToImg(pixels, origWidth, origHeight);
@@ -132,7 +134,21 @@ public class Hw7Main {
      */
 	public double calcAvgDistance(Instances original, Instances transformed) {
 
-		return -1.0;
+		double distanceSum = 0;
+		double squaredSum;
+
+		for (int i = 0; i < original.numInstances(); i++) {
+
+			squaredSum = 0;
+
+			for (int j = 0; j < original.numAttributes(); j++) {
+				squaredSum += Math.pow(original.instance(i).value(j) - transformed.instance(i).value(j), 2);
+			}
+
+			distanceSum += Math.sqrt(squaredSum);
+		}
+
+		return distanceSum / original.numAttributes();
 	}
 
 }

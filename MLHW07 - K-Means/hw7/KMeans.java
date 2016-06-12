@@ -1,5 +1,6 @@
 package hw7;
 
+import weka.classifiers.trees.adtree.ReferenceInstances;
 import weka.core.Debug;
 import weka.core.Instances;
 import weka.core.Instance;
@@ -72,7 +73,7 @@ public class KMeans {
 
         ArrayList<Instance>[] clusters = (ArrayList<Instance>[])new ArrayList[k];
 
-        // 1. Assigns all instances to their nearest centroid
+        // 1. Assigns all instances to their nearest centroid:
         int closestCentroid;
         Instance curInstance;
 
@@ -84,7 +85,7 @@ public class KMeans {
             clusters[closestCentroid].add(curInstance);
         }
 
-        // 2. Recomputes centroids using their assigned cluster
+        // 2. Recomputes centroids using their assigned cluster:
         double[] newCentroid = new double[4];
 
         // For each centroid,
@@ -104,7 +105,7 @@ public class KMeans {
                 newCentroid[i] /= cluster.size();
             }
 
-            // sets the new centroid that was found
+            // Sets the new centroid that was found
             centroids[centroid] = newCentroid;
         }
     }
@@ -114,14 +115,20 @@ public class KMeans {
      * Calculates the squared distance between the input instance and the input centroid.
      * @param instance - the given instance.
      * @param centroid - the array of centroids.
-     * @return the squared euclidian distance between the instance to the centroid.
+     * @return the squared Euclidian distance between the instance to the centroid.
      */
     public double calcSquaredDistance(Instance instance, double[] centroid) {
 
+        double squaredSum = 0;
 
-        return -1.0;
+        // Sums the squares of the differences between each RGBA values
+        for (int i = 0; i < 4; i++) {
+            squaredSum += Math.pow(instance.value(i) - centroid[i], 2);
+        }
+
+        // Returns the root of the sum
+        return Math.sqrt(squaredSum);
     }
-
 
     /**
      * Finds the closest centroid to the input instance.
@@ -132,14 +139,15 @@ public class KMeans {
 
         double currentDistance;
         double minDistance = Integer.MAX_VALUE;
-        int minCentroid = 0;
+        int minCentroidIndex = 0;
 
+        // Iterates over the centroids, calculates the distances, and saves the index of the min distance found
         for (int curCentroid = 0; curCentroid < k; curCentroid++) {
             currentDistance = calcSquaredDistance(instance, centroids[curCentroid]);
-            minCentroid = (currentDistance < minDistance) ? curCentroid : minCentroid;
+            minCentroidIndex = (currentDistance < minDistance) ? curCentroid : minCentroidIndex;
         }
 
-        return minCentroid;
+        return minCentroidIndex;
     }
 
     /**
@@ -149,21 +157,33 @@ public class KMeans {
      */
     public Instances quantize(Instances dataset) {
 
+        Instances quantizedInstances = new Instances(dataset);
+        double[] closestCentroid;
 
-        return null;
+        for (int i = 0; i < dataset.numInstances(); i++) {
+            closestCentroid = centroids[findClosestCentroid(dataset.instance(i))];
+            for (int j = 0; j < 4; j++) {
+                quantizedInstances.instance(i).setValue(j, closestCentroid[j]);
+            }
+        }
+        return quantizedInstances;
     }
 
-
     /**
-     * Calculates the cost function.
-     * Meaning, calculates the square root of the sum of the squared distances of every instance from the closest centroid to it.
+     * Calculates the cost function,
+     * which is the square root of the sum of the squared distances of every instance from the closest centroid to it.
      * @param dataset
-     * @return
+     * @return the average error.
      */
     public double calcAvgESSSE(Instances dataset) {
 
+        double distanceSum = 0;
 
-        return -1.0;
+        for (int i = 0; i < dataset.numInstances(); i++) {
+            distanceSum += calcSquaredDistance(dataset.instance(i), centroids[findClosestCentroid(dataset.instance(i))]);
+        }
+
+        return distanceSum / dataset.numInstances();
     }
 
 }
