@@ -16,16 +16,15 @@ import javax.imageio.ImageIO;
 
 import weka.classifiers.functions.LinearRegression;
 import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.DenseInstance;
 import weka.filters.Filter;
 //import weka.filters.unsupervised.attribute.PrincipalComponents;
 import weka.filters.unsupervised.attribute.Remove;
 
 public class Hw7Main {
-
 	public static BufferedReader readDataFile(String filename) {
 		BufferedReader inputReader = null;
 
@@ -80,6 +79,7 @@ public class Hw7Main {
 
 	}
 
+
 	public static BufferedImage convertInstancesToImg(Instances instancesImage, int width, int height) {
 		final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		int index = 0;
@@ -116,10 +116,9 @@ public class Hw7Main {
 			model.buildClusterModel(pixels);
 
 			quantizedPixels = model.quantize(pixels);
-			baboonClustering,
 
 			// 3. Convert back to an image and save the result
-			BufferedImage resultImage = convertInstancesToImg(pixels, origWidth, origHeight);
+			BufferedImage resultImage = convertInstancesToImg(quantizedPixels, origWidth, origHeight);
 			File result = new File("result.jpg");
 			ImageIO.write(resultImage, "jpg", result);
 		}
@@ -136,22 +135,19 @@ public class Hw7Main {
 	 * @param transformed - transformed dataset.
      */
 	public double calcAvgDistance(Instances original, Instances transformed) {
-
-		double distanceSum = 0;
-		double squaredSum;
-
-		for (int i = 0; i < original.numInstances(); i++) {
-
-			squaredSum = 0;
-
-			for (int j = 0; j < original.numAttributes(); j++) {
-				squaredSum += Math.pow(original.instance(i).value(j) - transformed.instance(i).value(j), 2);
-			}
-
-			distanceSum += Math.sqrt(squaredSum);
-		}
-
-		return distanceSum / original.numAttributes();
+//		double distanceSum = 0;
+//		double squaredSum;
+//
+//		for (int i = 0; i < original.numInstances(); i++) {
+//			squaredSum = 0;
+//
+//			for (int j = 0; j < original.numAttributes(); j++) {
+//				squaredSum += Math.pow(original.instance(i).value(j) - transformed.instance(i).value(j), 2);
+//			}
+//			distanceSum += Math.sqrt(squaredSum);
+//		}
+//		return distanceSum / original.numAttributes();
+		return -1.0;
 	}
 
 }
