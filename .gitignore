@@ -47,3 +47,5 @@ fabric.properties
 MLHW07 - K-Means/baboon_face.jpg
 MLHW07 - K-Means/src/
 MLHW07 - K-Means/sunset.jpg
+lib
+*.class

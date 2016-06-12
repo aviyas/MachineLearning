@@ -16,7 +16,7 @@ public class KMeans {
     /**
      * Initializes any parameters (therefore should call initializecentroids)
      * and runs the K-Means algorithm (which means to call findKMeansCentroids methods).
-     *
+     * <p>
      * It runs everything necessary to find the K clusters centroids on the input instances.
      *
      * @param datset - to run the algorithm on.
@@ -31,6 +31,7 @@ public class KMeans {
 
     /**
      * Initializes the centroids by selecting k random instances from the training set and setting the centers as those instances.
+     *
      * @param dataset - the training set.
      */
     public void initializeCentroids(Instances dataset) {
@@ -39,7 +40,7 @@ public class KMeans {
 
     /**
      * Finds the centroids according with the k-means algorithm, that converges to a minimum of the cost function.
-     *
+     * <p>
      * Stopping condition of iterations is "not moved much from previous location" (cost function / centroids), or
      * running for a certain number of iterations (40 is said to be good).
      *
@@ -52,6 +53,7 @@ public class KMeans {
 
     /**
      * Calculates the squared distance between the input instance and the input centroid.
+     *
      * @param instance - the given instance.
      * @param centroid - the array of centroids.
      * @return the squared euclidian distance between the instance to the centroid.
@@ -65,6 +67,7 @@ public class KMeans {
 
     /**
      * Finds the closest centroid to the input instance.
+     *
      * @param instance - the given instance.
      * @return the index of the closest centroid.
      */
@@ -76,6 +79,7 @@ public class KMeans {
 
     /**
      * Replaces every instance in Instances to the centroid to which it is closest to and return the new Instances object.
+     *
      * @param dataset - the given instances.
      * @return the clusters according to the centroids replacing each instance.
      */
@@ -89,6 +93,7 @@ public class KMeans {
     /**
      * Calculates the cost function.
      * Meaning, calculates the square root of the sum of the squared distances of every instance from the closest centroid to it.
+     *
      * @param dataset
      * @return
      */
